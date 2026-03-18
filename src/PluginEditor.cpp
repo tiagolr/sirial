@@ -320,31 +320,31 @@ void SirialAudioProcessorEditor::paint (Graphics& g)
     }
 
     auto timeMode = (int)audioProcessor.params.getRawParameterValue("time_mode")->load();
-
+    UIUtils::drawBevelLight(g, millisBtn.getBounds().toFloat().withRight((float)dottedBtn.getRight()).expanded(3,0), BEVEL_CORNER);
     if (timeMode == 0)
     {
         g.setColour(Colour(COLOR_ACTIVE));
-        g.fillRoundedRectangle(millisBtn.getBounds().toFloat().translated(0.5f, 0.5f), 3.f);
+        g.drawRoundedRectangle(millisBtn.getBounds().toFloat().translated(0.5f, 0.5f), 3.f, 1.f);
     }
-    UIUtils::drawClock(g, millisBtn.getBounds().toFloat().reduced(5.f), timeMode == 0 ? Colour(COLOR_BACKGROUND) : Colour(0xffffffff));
+    UIUtils::drawClock(g, millisBtn.getBounds().toFloat().reduced(5.f), timeMode == 0 ? Colour(0xffffffff) : Colour(COLOR_NEUTRAL));
     if (timeMode == 1)
     {
         g.setColour(Colour(COLOR_ACTIVE));
-        g.fillRoundedRectangle(straightBtn.getBounds().toFloat().translated(0.5f, 0.5f), 3.f);
+        g.drawRoundedRectangle(straightBtn.getBounds().toFloat().translated(0.5f, 0.5f), 3.f, 1.f);
     }
-    UIUtils::drawNote(g, straightBtn.getBounds().toFloat(), 0, timeMode == 1 ? Colour(COLOR_BACKGROUND) : Colour(0xffffffff));
+    UIUtils::drawNote(g, straightBtn.getBounds().toFloat(), 0, timeMode == 1 ? Colour(0xffffffff) : Colour(COLOR_NEUTRAL));
     if (timeMode == 2)
     {
         g.setColour(Colour(COLOR_ACTIVE));
-        g.fillRoundedRectangle(tripletBtn.getBounds().toFloat().translated(0.5f, 0.5f), 3.f);
+        g.drawRoundedRectangle(tripletBtn.getBounds().toFloat().translated(0.5f, 0.5f), 3.f, 1.f);
     }
-    UIUtils::drawNote(g, tripletBtn.getBounds().toFloat(), 1, timeMode == 2 ? Colour(COLOR_BACKGROUND) : Colour(0xffffffff));
+    UIUtils::drawNote(g, tripletBtn.getBounds().toFloat(), 1, timeMode == 2 ? Colour(0xffffffff) : Colour(COLOR_NEUTRAL));
     if (timeMode == 3)
     {
         g.setColour(Colour(COLOR_ACTIVE));
-        g.fillRoundedRectangle(dottedBtn.getBounds().toFloat().translated(0.5f, 0.5f), 3.f);
+        g.drawRoundedRectangle(dottedBtn.getBounds().toFloat().translated(0.5f, 0.5f), 3.f, 1.f);
     }
-    UIUtils::drawNote(g, dottedBtn.getBounds().toFloat(), 2, timeMode == 3 ? Colour(COLOR_BACKGROUND) : Colour(0xffffffff));
+    UIUtils::drawNote(g, dottedBtn.getBounds().toFloat(), 2, timeMode == 3 ? Colour(0xffffffff) : Colour(COLOR_NEUTRAL));
 }
 
 void SirialAudioProcessorEditor::resized()

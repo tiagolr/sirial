@@ -30,7 +30,7 @@ namespace globals {
 	constexpr unsigned int COLOR_KNOB = 0xff272727;
 	constexpr unsigned int COLOR_BEVEL = 0xff101010;
 	constexpr unsigned int COLOR_TAP = 0xff80ffff;
-	constexpr unsigned int COLOR_TAP2 = 0xffD444B9;
+	constexpr unsigned int COLOR_TAP2 = 0xffFE9E37;
 	constexpr unsigned int COLOR_TAP_HOVER = 0xFF00ff00;
 	constexpr float BEVEL_CORNER = 5.f;
 	constexpr int KNOB_WIDTH = 70;

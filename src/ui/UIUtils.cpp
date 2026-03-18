@@ -17,7 +17,7 @@ void UIUtils::drawBevel(Graphics& g, Rectangle<float> bounds, float corner, Colo
 
 void UIUtils::drawBevelLight(Graphics& g, Rectangle<float> bounds, float corner)
 {
-    g.setColour(Colour(COLOR_BEVEL).brighter(0.05f));
+    g.setColour(Colour(COLOR_BEVEL).brighter(0.1f));
     g.fillRoundedRectangle(bounds.reduced(0.5f), corner);
     g.setColour(Colour(COLOR_BEVEL));
     g.drawRoundedRectangle(bounds.reduced(0.5f), corner, 1.f);
