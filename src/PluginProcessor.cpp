@@ -38,8 +38,7 @@ AudioProcessorValueTreeState::ParameterLayout SirialAudioProcessor::createParame
     layout.add(std::make_unique<MetaParameterChoice>("mode", "Mode", StringArray{ "Mono", "Stereo", "Ping-Pong" }, 0));
     layout.add(std::make_unique<AudioParameterInt>("ntaps", "Num Taps", 1, 16, 4));
     layout.add(std::make_unique<AudioParameterBool>("reverse", "Reverse", false));
-    layout.add(std::make_unique<AudioParameterBool>("link", "Link", true));
-    layout.add(std::make_unique<AudioParameterInt>("grid", "Grid", 0, 32, 0));
+    layout.add(std::make_unique<AudioParameterBool>("link", "Link", false));
 
     layout.add(std::make_unique<AudioParameterChoice>("time_mode", "Time Mode", StringArray{"Millis", "Straight", "Tripplet", "Dotted" }, 1));
     layout.add(std::make_unique<AudioParameterChoice>("time_sync", "Time Sync", StringArray{"1/64", "1/32", "1/16", "1/8", "1/4", "1/2", "1/1"}, 4));
@@ -54,11 +53,11 @@ AudioProcessorValueTreeState::ParameterLayout SirialAudioProcessor::createParame
         layout.add(std::make_unique<AudioParameterFloat>(prefix + "time_r", prefixnm + "Time Right %", NormalisableRange<float>(0.f, 10.f), 1.f));
         layout.add(std::make_unique<AudioParameterFloat>(prefix + "amp_l", prefixnm + "Amp Left", NormalisableRange<float>(0.f, 1.f), 1.f));
         layout.add(std::make_unique<AudioParameterFloat>(prefix + "amp_r", prefixnm + "Amp Right", NormalisableRange<float>(0.f, 1.f), 1.f));
-        layout.add(std::make_unique<AudioParameterFloat>(prefix + "feedback", prefixnm + "Feedback", NormalisableRange<float>(0.f, 1.f), 1.f));
+        layout.add(std::make_unique<AudioParameterFloat>(prefix + "feedback", prefixnm + "Feedback", NormalisableRange<float>(0.f, 1.f), t == 0 ? 0.5f : 1.f));
         layout.add(std::make_unique<AudioParameterBool>(prefix + "feedback_global", prefixnm + "Feedback Global", t == 0));
     }
 
-    layout.add(std::make_unique<AudioParameterFloat>("feedback", "Feedback", -1.f, 1.f, 0.5f));
+    layout.add(std::make_unique<AudioParameterFloat>("feedback", "Feedback", 0.f, 1.f, 0.0f));
     layout.add(std::make_unique<AudioParameterFloat>("pipo_width", "Pipo Width", -1.f, 1.f, 1.f));
 
     layout.add(std::make_unique<AudioParameterFloat>("pan_dry", "Pan Dry", 0.f, 1.f, 0.5f));

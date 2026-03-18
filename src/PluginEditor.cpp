@@ -146,7 +146,7 @@ SirialAudioProcessorEditor::SirialAudioProcessorEditor (SirialAudioProcessor& p)
         };
     
     addAndMakeVisible(linkBtn);
-    linkBtn.setBounds(dottedBtn.getBounds().withX(dottedBtn.getRight() + 10).withWidth(50));
+    linkBtn.setBounds(dottedBtn.getBounds().withX(dottedBtn.getRight() + 10).withWidth(55));
     linkBtn.setAlpha(0.f);
     linkBtn.onClick = [this]
         {
@@ -156,7 +156,20 @@ SirialAudioProcessorEditor::SirialAudioProcessorEditor (SirialAudioProcessor& p)
 
     delayView = std::make_unique<DelayView>(*this);
     addAndMakeVisible(delayView.get());
-    delayView->setBounds(col, row + 35, KNOB_WIDTH * 7, 175);
+    delayView->setBounds(col, row + 35, KNOB_WIDTH * 7, 185);
+
+    // BELOW DELAY VIEW
+    col = PLUG_PADDING;
+
+    mix = std::make_unique<Rotary>(audioProcessor, "mix", "Mix", Rotary::percx100, true);
+    addAndMakeVisible(mix.get());
+    mix->setBounds(col, getHeight() - PLUG_PADDING - KNOB_HEIGHT, KNOB_WIDTH, KNOB_HEIGHT);
+
+    feedback = std::make_unique<Rotary>(audioProcessor, "feedback", "Feedback", Rotary::percx100);
+    addAndMakeVisible(feedback.get());
+    feedback->setBounds(mix->getBounds().translated(KNOB_WIDTH, 0));
+
+    // 
 
     addAndMakeVisible(outGain);
     outGainAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.params, "out_gain", outGain);
@@ -223,8 +236,10 @@ void SirialAudioProcessorEditor::parameterChanged (const juce::String& parameter
 
 void SirialAudioProcessorEditor::toggleUIComponents()
 {
+    auto mode = (int)audioProcessor.params.getRawParameterValue("mode")->load();
     auto link = (bool)audioProcessor.params.getRawParameterValue("link")->load();
     linkBtn.setToggleState(link, dontSendNotification);
+    linkBtn.setVisible(mode != 0);
 
     auto timeMode = (int)audioProcessor.params.getRawParameterValue("time_mode")->load();
     tapsTimeMillis->setVisible(timeMode == 0);
@@ -281,13 +296,17 @@ void SirialAudioProcessorEditor::paint (Graphics& g)
 
     // draw buttons
     auto link = audioProcessor.params.getRawParameterValue("link")->load();
-    g.setColour(Colour(COLOR_ACTIVE));
-    if (link)
+    if (linkBtn.isVisible())
     {
-        g.fillRoundedRectangle(linkBtn.getBounds().toFloat().translated(0.5f,0.5f), 3.f);
-        g.setColour(Colour(COLOR_BACKGROUND));
+        g.setColour(Colour(COLOR_ACTIVE));
+        if (link)
+        {
+            g.fillRoundedRectangle(linkBtn.getBounds().toFloat().translated(0.5f,0.5f), 3.f);
+            g.setColour(Colour(COLOR_BACKGROUND));
+        }
+        UIUtils::drawChain(g, linkBtn.getBounds().toFloat().withWidth(25.f).translated(8.f, 3.f), link ? Colour(COLOR_BACKGROUND) : Colour(COLOR_ACTIVE));
+        g.drawText("Link", linkBtn.getBounds().translated(8,0), Justification::centred);
     }
-    g.drawText("Link", linkBtn.getBounds(), Justification::centred);
 
     auto timeMode = (int)audioProcessor.params.getRawParameterValue("time_mode")->load();
 

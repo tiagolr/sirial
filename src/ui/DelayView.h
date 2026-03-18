@@ -20,6 +20,7 @@ public:
         float timeL;
         float timeR;
         float feedback;
+        float snapacc; // used for snapping to other same tap channel
     };
 
     DelayView(SirialAudioProcessorEditor& p);
@@ -43,18 +44,18 @@ private:
     Point<int> last_mouse_position{};
     int mouseOverBase = -1;
     int selectedTap = 0;
-    bool link;
+    bool link = false;
     Delay::DelayMode mode = Delay::DelayMode::Mono;
     int ntaps = 0;
     int userGrid = 0;
-    std::array<Tap, MAX_TAPS> taps;
+    std::array<Tap, MAX_TAPS> taps{};
     std::array<Rectangle<float>, MAX_TAPS> bases_mono{};
     std::array<Rectangle<float>, MAX_TAPS> bases_left{};
     std::array<Rectangle<float>, MAX_TAPS> bases_right{};
     Delay::TimeMode timeMode = Delay::Millis;
     Delay::TimeSync timeSync = Delay::k1o4;
     int timeMillis = 0;
-    Tap dummyTap;
+    Tap dummyTap{};
 
     Rectangle<float> viewb{};
 };

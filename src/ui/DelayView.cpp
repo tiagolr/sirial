@@ -88,6 +88,9 @@ void DelayView::mouseDown(const MouseEvent& e)
 		return;
 
 	selectedTap = mouseOverBase;
+	int idx = selectedTap >= 1337 ? selectedTap - 1337 : selectedTap;
+	taps[idx].snapacc = 0.f;
+
 	last_mouse_position = e.getPosition();
 	setMouseCursor(MouseCursor::NoCursor);
 	e.source.enableUnboundedMouseMovement(true);
@@ -146,6 +149,20 @@ void DelayView::mouseDrag(const MouseEvent& e)
 		float pos = std::clamp(tap.timeL + slider_change, 0.f, 10.f);
 		float posnxt = std::clamp(nextTap.timeL - slider_change, 0.f, 10.f);
 
+		// snap left channel to right channel, removes haas
+		if (mode != Delay::Mono && !link && std::fabs(pos - tap.timeR) < 1e-2)
+		{
+			if (std::fabs(tap.snapacc) < 0.05)
+			{
+				tap.snapacc += slider_change;
+				posnxt = nextTap.timeL - (tap.timeR - tap.timeL);
+				pos = tap.timeR;
+			}
+		}
+		// reset snapping when direction changes
+		if (slider_change > 0.f && tap.snapacc < 0.f) tap.snapacc = 0.f;
+		if (slider_change < 0.f && tap.snapacc > 0.f) tap.snapacc = 0.f;
+
 		// clamp
 		if (pos == 0 && tap.timeL == 0)
 			posnxt = nextTap.timeL; // keep next pos at same place
@@ -162,6 +179,20 @@ void DelayView::mouseDrag(const MouseEvent& e)
 	{
 		float pos = std::clamp(tap.timeR + slider_change, 0.f, 10.f);
 		float posnxt = std::clamp(nextTap.timeR - slider_change, 0.f, 10.f);
+
+		// snap left channel to right channel, removes haas
+		if (mode != Delay::Mono && !link && std::fabs(pos - tap.timeL) < 1e-2)
+		{
+			if (std::fabs(tap.snapacc) < 0.05)
+			{
+				tap.snapacc += slider_change;
+				posnxt = nextTap.timeR - (tap.timeL - tap.timeR);
+				pos = tap.timeL;
+			}
+		}
+		// reset snapping when direction changes
+		if (slider_change > 0.f && tap.snapacc < 0.f) tap.snapacc = 0.f;
+		if (slider_change < 0.f && tap.snapacc > 0.f) tap.snapacc = 0.f;
 
 		// clamp
 		if (pos == 0 && tap.timeR == 0)
@@ -234,7 +265,7 @@ void DelayView::updateAmplitudes(const MouseEvent& e)
 		{
 			for (int t = 0; t < ntaps; ++t)
 			{
-				Rectangle<float> b = bases_mono[t];
+				Rectangle<float> b = bases_right[t];
 				if (mousex > b.getCentreX() - 2 && mousex < b.getCentreX() + 2)
 				{
 					float normalY = std::clamp((mousey - viewb.getCentreY() - TAP_BASE_H) / (viewb.getHeight() / 2.f - TAP_BASE_H), 0.f, 1.f);
@@ -260,7 +291,6 @@ void DelayView::paint(Graphics& g)
 	timeMode = (Delay::TimeMode)editor.audioProcessor.params.getRawParameterValue("time_mode")->load();
 	timeSync = (Delay::TimeSync)editor.audioProcessor.params.getRawParameterValue("time_sync")->load();
 	timeMillis = (int)editor.audioProcessor.params.getRawParameterValue("time_millis")->load();
-	userGrid = (int)editor.audioProcessor.params.getRawParameterValue("grid")->load();
 
 	for (int t = 0; t < MAX_TAPS; ++t)
 	{
@@ -302,10 +332,13 @@ void DelayView::paint(Graphics& g)
 void DelayView::drawGrid(Graphics& g)
 {
 	bool isTriplet = timeMode == Delay::Triplet;
-	int grid = userGrid > 0 ? userGrid : isTriplet ? 3 * (ntaps + 1) : 4 * (ntaps + 1);
+	bool isDotted = timeMode == Delay::Dotted;
+	int grid = isTriplet ? 3 * (ntaps + 1) : 4 * (ntaps + 1);
 
 	float gridx = viewb.getWidth() / grid;
 	float gridy = viewb.getHeight() / 8;
+
+	if (isDotted) gridx *= 1.5f;
 
 	g.setColour(Colours::white.withAlpha(0.1f)); // map score into min + score * (max - min)
 	for (int i = 0; i < grid + 1; ++i)
@@ -314,7 +347,7 @@ void DelayView::drawGrid(Graphics& g)
 		float x = (float)(viewb.getX() + std::round(gridx * i) + 0.5f);
 
 		g.setColour(Colours::white.withAlpha(isBold ? 0.1f : 0.05f));
-		if (grid > 32 && i % 2 == 1)
+		if (grid > 32 && !isTriplet && i % 2 == 1)
 			g.setColour(Colours::transparentBlack);
 		g.drawLine(x, viewb.getY(), x, viewb.getY() + viewb.getHeight());
 	}
@@ -340,7 +373,9 @@ void DelayView::drawGrid(Graphics& g)
 		if (timeSync == Delay::k1o1) den = 1;
 
 		g.setColour(Colours::white.withAlpha(0.25f));
-		auto x = (int)(viewb.getX() + i * gridx * 4);
+		auto x = isTriplet 
+			? (int)(viewb.getX() + i * gridx * 3)
+			: (int)(viewb.getX() + i * gridx * 4);
 		g.drawVerticalLine(x, viewb.getY() - 5, viewb.getY());
 
 		if (grid > 32 && i % 2 == 1)
@@ -354,7 +389,8 @@ void DelayView::drawGrid(Graphics& g)
 		}
 		else 
 		{
-			text = String(num) + "/" + String(den);
+			text = String(num);
+			if (isDotted) text += "D";
 		}
 		g.drawText(text, Rectangle<int>({ x - 43, (int)viewb.getY() - 15, 40, 15 }), Justification::centredRight);
 	}
@@ -408,7 +444,7 @@ void DelayView::drawTaps(Graphics& g)
 
 	if (mode == Delay::Mono)
 	{
-		for (int t = 0; t < ntaps; ++t)
+		for (int t = ntaps-1; t >= 0; --t)
 		{
 			g.setColour(Colour(COLOR_TAP));
 			if (mouseOverBase == t) g.setColour(Colour(COLOR_TAP_HOVER));
@@ -418,12 +454,12 @@ void DelayView::drawTaps(Graphics& g)
 	}
 	else
 	{
-		for (int t = 0; t < ntaps; ++t)
+		for (int t = ntaps - 1; t >= 0; --t)
 		{
 			g.setColour(Colour(mode == Delay::PingPong && t % 2 == 1 ? COLOR_TAP2 : COLOR_TAP));
 			if (mouseOverBase == t || link && mouseOverBase == t + 1337) 
 				g.setColour(Colour(COLOR_TAP_HOVER));
-			drawBase(bases_left[t]);
+			drawBase(bases_left[t].expanded(0, 0.5f));
 			drawWickLeft(bases_left[t], taps[t]);
 			g.setColour(Colour(mode == Delay::PingPong && t % 2 == 1 ? COLOR_TAP : COLOR_TAP2));
 			if (mouseOverBase == t + 1337 || link && mouseOverBase == t) 

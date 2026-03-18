@@ -67,6 +67,7 @@ private:
 
     std::unique_ptr<DelayView> delayView;
     std::unique_ptr<Rotary> mix;
+    std::unique_ptr<Rotary> feedback;
 
     Slider outGain;
     Label outGainLabel;
