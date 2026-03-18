@@ -15,6 +15,14 @@ void UIUtils::drawBevel(Graphics& g, Rectangle<float> bounds, float corner, Colo
     g.fillRoundedRectangle(bounds.expanded(-1.f), corner);
 }
 
+void UIUtils::drawBevelLight(Graphics& g, Rectangle<float> bounds, float corner)
+{
+    g.setColour(Colour(COLOR_BEVEL).brighter(0.05f));
+    g.fillRoundedRectangle(bounds.reduced(0.5f), corner);
+    g.setColour(Colour(COLOR_BEVEL));
+    g.drawRoundedRectangle(bounds.reduced(0.5f), corner, 1.f);
+}
+
 void UIUtils::drawMenu(Graphics& g, Rectangle<float>bounds, Colour c, bool drawEllipsis)
 {
     Path p;
@@ -81,9 +89,10 @@ void UIUtils::drawClock(Graphics& g, Rectangle<float> bounds, Colour color)
 void UIUtils::drawNote(Graphics& g, Rectangle<float> bounds, int mode, Colour color)
 {
     auto r = 3;
+    bounds = bounds.translated(0, -4.f);
     g.setColour(color);
     g.fillEllipse(bounds.getCentreX() - r, bounds.getBottom() - r * 2, r * 2.f, r * 2.f);
-    g.drawVerticalLine((int)bounds.getCentreX() + r - 1, bounds.getBottom() - 10 - r, bounds.getBottom() - r);
+    g.drawVerticalLine((int)bounds.getCentreX() + r - 1, bounds.getBottom() - 13 - r, bounds.getBottom() - r);
 
     g.setFont(FontOptions(12.f));
     if (mode == 1)

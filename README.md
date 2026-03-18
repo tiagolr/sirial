@@ -19,7 +19,13 @@
 
 </div>
 
-**Sirial** (short for quick-delay) is a dual-delay with more features than it should for a free plugin that's supposed to be quick. While it offers nothing groundbreaking it is based on popular units like *ReplikaXT* and *EchoBoy*. The main goal is to create a free and open plug-in for my own productions, an alternative to the popular [Deelay](https://sixthsample.com/deelay/) by *SixthSample* without premium versions or trimmed features or on-line activation.
+**Sirial** is a Rhythmic Delay where each tap can be placed precisely and configured with different amplitudes and feedback to create any patterns of delay sequences.
+
+It is loosely based on EchoBoy Tap mode, with the novelty that it uses _serial delay lines_ instead of classic delay taps, this hybrid approach enables the versatility of multi-tap delays with features like natural decay (optional) and coloring of standard delays, producing a more pleasant or realistic sound.
+
+The main advantage of using serial delay lines is that any effects on the feedback path, like damping, are applied in each tap like normal delays, it also enables natural decay over the taps and more importantly allows for classic modes like Ping-Pong or cross feedback. This comes at a cost of complexity and CPU usage, not that the serial delay lines are expensive its just that multiple taps using a single delay line is extremely cheap.
+
+For this plug-in I didn't include many effects since applying them on each tap can be prohibitively expensive, for example feedback pitch-shift or saturation would be computed each sample for 16 * 2 channels of delay lines. The effects included are only pre or post delay, and others can be added manually outside the plug-in in any DAW. If you are looking for a typical delay with more FXs and  modes checkout [QDelay](https://github.com/tiagolr/qdelay).
 
 <div align="center">
 
@@ -50,39 +56,9 @@
 * [Download latest release](https://github.com/tiagolr/sirial/releases)
 * Current builds include VST3 for Windows, VST3 and LV2 for Linux and AU and VST3 for macOS.
 
-## About
-
-**sirial** [started as a JSFX](https://github.com/tiagolr/tilr_jsfx?tab=readme-ov-file#sirial) a few years ago to have a quick delay with basic features like Ping-Pong, cutoff and pitch shift. Like other plug-ins I've rebuilt, the goal is to make an improved version using better tools with better visuals, performance etc.
-
-I decided to build a plug-in that could come somewhat close to EchoBoy in terms of capabilities, the result is good enough but probably nowhere near the quality of Saturations or Tape emulations that SoundToys and Native Instruments engineers can achieve. The distortion unit is based of [JClones TapeHead](https://github.com/JClones/JSFXClones/blob/master/JClones_TapeHead.md) - an open JSFX tape like distortion.
-
-For the pitch shift, I couldn't find many solutions for a zero latency pitch shift that I could adapt to this project, so I went with what I know and ported Saike's [Pitch_Shift](https://github.com/JoepVanlier/JSFX/blob/master/Basics/Saike_Pitch_Shift.jsfx) library from JSFX to c++ and JUCE. The result is surprisingly good and it's impressive the number of people looking for a solution like this in JUCE forums and other places.
-
-Delay swing is implemented using serial delay lines with different times and Feel/Offset is implemented in a hacky way by shifting the write position of the input in relation to the feedback with some extra care to pick the leading write to override the circular buffer while the trailing write overdubs the existing contents.
-
-Tape Flutter and Wow, is taken from ChowDSP [AnalogTapeModel](https://github.com/jatinchowdhury18/AnalogTapeModel).
-
-For future work things can be added like multiple taps per delay like EchoBoy or Valhalla delay, better saturations and more delay modes.
-
-Feel free to explore the repository for snippets on parametric EQs, envelope followers, pitch shifting etc.. or most likely just download the plug-in and have fun with it.
-
 ## Tips
 
-Current signal routing:
 
-```
-Input > EQ Input > LoFi pre > Saturation Pre > Diffusion Pre >
-[Delay <-> Modulation <-> EQ Feedback <-> Pitch Feedback <-> Saturation Feedback] >
-Pitch Post > Tape Wow/Flutter > Lofi Post > Saturation Post > Diffusion Post > EQ Output > Output
-```
-
-* Diffusion and Pitch shift can be configured to be Pre|Post or Feedback|Post in the settings menu.
-* Saturation can run on the feedback loop for analog tape distortion, with caution, it adds energy each feedback pass.
-* In **Tap** mode the first time controls the offset (tap), the second is the delay time.
-* In **Ping-Pong classic** mode the decay is only applied in one channel (left or right).
-* **Feel** control offsets the whole delay line by max 1/16 note.
-* **Bias** control in Saturation tab shifts the saturation curve creating even harmonics.
-* **Dynamics** control in Saturation tab makes louder hits harder and quieter softer.
 
 ## MacOS
 

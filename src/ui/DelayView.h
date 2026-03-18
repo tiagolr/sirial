@@ -31,6 +31,8 @@ public:
     void mouseUp(const MouseEvent& e) override;
     void mouseDrag(const MouseEvent& e) override;
 
+    void updateAmplitudes(const MouseEvent& e);
+
     void paint(Graphics& g) override;
     void drawGrid(Graphics& g);
     void drawTaps(Graphics& g);

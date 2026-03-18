@@ -71,7 +71,7 @@ void Delay::updateBaseSamples()
 {
     if (timeMode == Millis)
     {
-        baseSamples = timeMillis * srate * 0.001f;
+        baseSamples = (int)(timeMillis * srate * 0.001f);
         return;
     }
 
@@ -95,13 +95,6 @@ void Delay::updateBaseSamples()
 void Delay::processBlock(float* left, float* right, int nsamps)
 {
     auto mode = (DelayMode)audioProcessor.params.getRawParameterValue("mode")->load();
-
-    auto feedback = audioProcessor.params.getRawParameterValue("feedback")->load();
-    float feedbackSign = feedback < 0.f ? -1.f : 1.f;
-    feedback = std::fabs(feedback);
-    auto pipoWidth = audioProcessor.params.getRawParameterValue("pipo_width")->load();
-    float lfactor = pipoWidth > 0.f ? 1.f - pipoWidth : 1.f;
-    float rfactor = pipoWidth < 0.f ? 1.f + pipoWidth : 1.f;
 
     // resize taps delaylines
     updateBaseSamples();
@@ -131,8 +124,8 @@ void Delay::processBlock(float* left, float* right, int nsamps)
         // a full measure of reversed signal has been written
         auto& tap = taps[0];
 
-        float tl = (tap.timeL) * 2;
-        float tr = (tap.timeR) * 2;
+        float tl = (tap.timeL) * 2.f;
+        float tr = (tap.timeR) * 2.f;
         revL.resize((int)std::ceil(tl), 0.f);
         revR.resize((int)std::ceil(tr), 0.f);
         revsizeL = (int)revL.size();

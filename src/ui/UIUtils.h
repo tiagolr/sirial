@@ -9,6 +9,7 @@ class UIUtils {
 public:
 
 static void drawBevel(Graphics& g, Rectangle<float> bounds, float corner, Colour bg);
+static void drawBevelLight(Graphics& g, Rectangle<float> bounds, float corner);
 static void drawMenu(Graphics& g, Rectangle<float>bounds, Colour c, bool drawEllipsis);
 static void drawTriangle(Graphics& g, Rectangle<float> bounds, int direction, Colour c);
 static void drawClock(Graphics& g, Rectangle<float> bounds, Colour color);

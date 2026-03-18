@@ -107,12 +107,14 @@ void DelayView::mouseUp(const MouseEvent& e)
 	
 	Desktop::getInstance().setMousePosition(localPointToGlobal(base.getCentre().roundToInt()));
 }
+
 void DelayView::mouseDrag(const MouseEvent& e)
 {
+
 	// check for amp changes
 	if (mouseOverBase == -1)
 	{
-
+		updateAmplitudes(e);
 		return;
 	}
 
@@ -127,8 +129,17 @@ void DelayView::mouseDrag(const MouseEvent& e)
 	int tapidx = isRightTap ? mouseOverBase - 1337 : mouseOverBase;
 	int nextTapidx = tapidx + 1;
 	auto& tap = taps[tapidx];
-	auto& nextTap = nextTapidx < MAX_TAPS ? taps[nextTapidx] : dummyTap;
+	auto& nextTap = nextTapidx < ntaps ? taps[nextTapidx] : dummyTap;
 	dummyTap.timeL = dummyTap.timeR = 100.f;
+
+	float cumsumL = 0.f;
+	float cumsumR = 0.f;
+	for (int t = 0; t < tapidx; ++t)
+	{
+		cumsumL += taps[t].timeL;
+		cumsumR += taps[t].timeR;
+	}
+
 	
 	if (mode == Delay::Mono || link || !isRightTap)
 	{
@@ -137,13 +148,11 @@ void DelayView::mouseDrag(const MouseEvent& e)
 
 		// clamp
 		if (pos == 0 && tap.timeL == 0)
-		{
 			posnxt = nextTap.timeL; // keep next pos at same place
-		}
 		if (posnxt == 0 && tap.timeL >= 1.f)
-		{
 			pos = tap.timeL; // keep pos at same place
-		}
+		if (cumsumL + pos >= ntaps + 1.f)
+			pos = tap.timeL; // prevent last tap from going off the viewport
 
 		tap.timeL = pos;
 		nextTap.timeL = posnxt;
@@ -151,8 +160,19 @@ void DelayView::mouseDrag(const MouseEvent& e)
 
 	if (mode == Delay::Mono || link || isRightTap)
 	{
-		tap.timeR = std::clamp(tap.timeR + slider_change, 0.f, 10.f);
-		nextTap.timeR = std::clamp(nextTap.timeR - slider_change, 0.f, 10.f);
+		float pos = std::clamp(tap.timeR + slider_change, 0.f, 10.f);
+		float posnxt = std::clamp(nextTap.timeR - slider_change, 0.f, 10.f);
+
+		// clamp
+		if (pos == 0 && tap.timeR == 0)
+			posnxt = nextTap.timeR; // keep next pos at same place
+		if (posnxt == 0 && tap.timeR >= 1.f)
+			pos = tap.timeR; // keep pos at same place
+		if (cumsumL + pos >= ntaps + 1.f)
+			pos = tap.timeR; // prevent last tap from going off the viewport
+
+		tap.timeR = pos;
+		nextTap.timeR = posnxt;
 	}
 
 	String prefix = "tap" + String(tapidx) + "_";
@@ -161,13 +181,70 @@ void DelayView::mouseDrag(const MouseEvent& e)
 	param = editor.audioProcessor.params.getParameter(prefix + "time_r");
 	param->setValueNotifyingHost(param->convertTo0to1(tap.timeR));
 
-	if (nextTapidx < MAX_TAPS)
+	if (nextTapidx < ntaps)
 	{
 		prefix = "tap" + String(nextTapidx) + "_";
 		param = editor.audioProcessor.params.getParameter(prefix + "time_l");
 		param->setValueNotifyingHost(param->convertTo0to1(nextTap.timeL));
 		param = editor.audioProcessor.params.getParameter(prefix + "time_r");
 		param->setValueNotifyingHost(param->convertTo0to1(nextTap.timeR));
+	}
+}
+
+void DelayView::updateAmplitudes(const MouseEvent& e)
+{
+	float mousex = (float)e.position.x;
+	float mousey = (float)e.position.y;
+
+	if (mode == Delay::Mono)
+	{
+		for (int t = 0; t < ntaps; ++t)
+		{
+			Rectangle<float> b = bases_mono[t];
+			if (mousex > b.getCentreX() - 2 && mousex < b.getCentreX() + 2)
+			{
+				float normalY = std::clamp((viewb.getBottom() - mousey - TAP_BASE_H) / (viewb.getHeight() - TAP_BASE_H), 0.f, 1.f);
+
+				String prefix = "tap" + String(t) + "_";
+				auto param = editor.audioProcessor.params.getParameter(prefix + "amp_l");
+				param->setValueNotifyingHost(normalY);
+				param = editor.audioProcessor.params.getParameter(prefix + "amp_r");
+				param->setValueNotifyingHost(normalY);
+			}
+		}
+	}
+	else
+	{
+		if (mousey < viewb.getCentreY())
+		{
+			for (int t = 0; t < ntaps; ++t)
+			{
+				Rectangle<float> b = bases_left[t];
+				if (mousex > b.getCentreX() - 2 && mousex < b.getCentreX() + 2)
+				{
+					float normalY = std::clamp((viewb.getCentreY() - mousey - TAP_BASE_H) / (viewb.getHeight() / 2.f - TAP_BASE_H), 0.f, 1.f);
+
+					String prefix = "tap" + String(t) + "_";
+					auto param = editor.audioProcessor.params.getParameter(prefix + "amp_l");
+					param->setValueNotifyingHost(normalY);
+				}
+			}
+		}
+		else
+		{
+			for (int t = 0; t < ntaps; ++t)
+			{
+				Rectangle<float> b = bases_mono[t];
+				if (mousex > b.getCentreX() - 2 && mousex < b.getCentreX() + 2)
+				{
+					float normalY = std::clamp((mousey - viewb.getCentreY() - TAP_BASE_H) / (viewb.getHeight() / 2.f - TAP_BASE_H), 0.f, 1.f);
+
+					String prefix = "tap" + String(t) + "_";
+					auto param = editor.audioProcessor.params.getParameter(prefix + "amp_r");
+					param->setValueNotifyingHost(normalY);
+				}
+			}
+		}
 	}
 }
 
@@ -196,17 +273,21 @@ void DelayView::paint(Graphics& g)
 		tap.feedback = editor.audioProcessor.params.getRawParameterValue(prefix + "feedback")->load();
 	}
 
-	float lastx = 0;
+	float lastxl = 0;
+	float lastxr = 0;
 	for (int t = 0; t < ntaps; ++t)
 	{
 		auto& tap = taps[t];
 		float gridsz = viewb.getWidth() / (ntaps + 1);
-		float x = gridsz * tap.timeL + lastx;
+		float x = gridsz * tap.timeL + lastxl;
 		if (t == 0) x += viewb.getX();
-		lastx = x;
+		lastxl = x;
 		bases_mono[t] = Rectangle<float>(x - TAP_BASE_W / 2.f, viewb.getBottom() - TAP_BASE_H, TAP_BASE_W, TAP_BASE_H);
 		bases_left[t] = bases_mono[t].withY(viewb.getCentreY() - TAP_BASE_H);
-		x = viewb.getX() + gridsz * t + gridsz * tap.timeR;
+
+		x = gridsz * tap.timeR + lastxr;
+		if (t == 0) x += viewb.getX();
+		lastxr = x;
 		bases_right[t] = Rectangle<float>(x - TAP_BASE_W / 2.f, viewb.getCentreY(), TAP_BASE_W, TAP_BASE_H);
 	}
 
@@ -222,28 +303,19 @@ void DelayView::drawGrid(Graphics& g)
 {
 	bool isTriplet = timeMode == Delay::Triplet;
 	int grid = userGrid > 0 ? userGrid : isTriplet ? 3 * (ntaps + 1) : 4 * (ntaps + 1);
-	if (userGrid == 0)
-	{
-		if (isTriplet && grid > 3 * (8 + 1))
-		{
-			grid = 3 * (8 + 1); // TODO
-		}
-		else if (grid > 4 * (8 + 1))
-		{
-			grid = 4 * (8 + 1); // TODO
-		}
-	}
 
 	float gridx = viewb.getWidth() / grid;
 	float gridy = viewb.getHeight() / 8;
 
 	g.setColour(Colours::white.withAlpha(0.1f)); // map score into min + score * (max - min)
-	for (int i = 0; i < grid + 1; ++i) 
+	for (int i = 0; i < grid + 1; ++i)
 	{
 		bool isBold = isTriplet ? i % 3 == 0 : i % 4 == 0;
 		float x = (float)(viewb.getX() + std::round(gridx * i) + 0.5f);
 
 		g.setColour(Colours::white.withAlpha(isBold ? 0.1f : 0.05f));
+		if (grid > 32 && i % 2 == 1)
+			g.setColour(Colours::transparentBlack);
 		g.drawLine(x, viewb.getY(), x, viewb.getY() + viewb.getHeight());
 	}
 
@@ -254,9 +326,8 @@ void DelayView::drawGrid(Graphics& g)
 		g.drawLine(viewb.getX(), y, viewb.getX() + viewb.getWidth(), y);
 	}
 
-	g.setColour(Colour(COLOR_NEUTRAL));
 	g.setFont(FontOptions(12.f));
-	for (int i = 1; i <= 5; ++i)
+	for (int i = 1; i <= ntaps; ++i)
 	{
 		int num = i;
 		int den = 0;
@@ -266,13 +337,26 @@ void DelayView::drawGrid(Graphics& g)
 		if (timeSync == Delay::k1o8) den = 8;
 		if (timeSync == Delay::k1o4) den = 4;
 		if (timeSync == Delay::k1o2) den = 2;
-		if (timeSync == Delay::k1o2) den = 1;
+		if (timeSync == Delay::k1o1) den = 1;
 
-		auto x = (int)(viewb.getX() + i * (viewb.getWidth() / 5));
+		g.setColour(Colours::white.withAlpha(0.25f));
+		auto x = (int)(viewb.getX() + i * gridx * 4);
 		g.drawVerticalLine(x, viewb.getY() - 5, viewb.getY());
 
-		String text = String(num) + "/" + String(den);
-		g.drawText(text, Rectangle<int>({ x - 23, (int)viewb.getY() - 15, 20, 15 }), Justification::centredRight);
+		if (grid > 32 && i % 2 == 1)
+			g.setColour(Colours::transparentBlack);
+
+		String text;
+		if (timeMode == Delay::Millis)
+		{
+			auto ms = timeMillis * i;
+			text = ms >= 1000 ? String(ms / 1000.f, 2) + "s" : String(ms) + "ms";
+		}
+		else 
+		{
+			text = String(num) + "/" + String(den);
+		}
+		g.drawText(text, Rectangle<int>({ x - 43, (int)viewb.getY() - 15, 40, 15 }), Justification::centredRight);
 	}
 }
 
@@ -303,19 +387,19 @@ void DelayView::drawTaps(Graphics& g)
 	auto drawWickMono = [&](Rectangle<float> base, Tap& tap)
 		{
 			float h = (viewb.getHeight() - TAP_BASE_H) * tap.ampL;
-			g.fillRect(base.getCentreX() - TAP_LINE_W / 2.f, base.getY() - h, TAP_LINE_W, h);
+			g.fillRect(base.getCentreX() - TAP_LINE_W / 2.f, base.getY() - h, TAP_LINE_W, h + 2);
 		};
 
 	auto drawWickLeft = [&](Rectangle<float> base, Tap& tap)
 		{
 			float h = (viewb.getHeight() / 2.f - TAP_BASE_H) * tap.ampL;
-			g.fillRect(base.getCentreX() - TAP_LINE_W / 2.f, base.getY() - h, TAP_LINE_W, h);
+			g.fillRect(base.getCentreX() - TAP_LINE_W / 2.f, base.getY() - h, TAP_LINE_W, h + 2);
 		};
 
 	auto drawWickRight = [&](Rectangle<float> base, Tap& tap)
 		{
 			float h = (viewb.getHeight() / 2.f - TAP_BASE_H) * tap.ampR;
-			g.fillRect(base.getCentreX() - TAP_LINE_W / 2.f, base.getBottom(), TAP_LINE_W, h);
+			g.fillRect(base.getCentreX() - TAP_LINE_W / 2.f, base.getBottom() - 2, TAP_LINE_W, h + 2);
 		};
 
 	// draw dry input tap

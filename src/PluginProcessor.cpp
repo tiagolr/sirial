@@ -35,23 +35,23 @@ AudioProcessorValueTreeState::ParameterLayout SirialAudioProcessor::createParame
 {
     AudioProcessorValueTreeState::ParameterLayout layout;
 
-    layout.add(std::make_unique<AudioParameterChoice>("mode", "Mode", StringArray{ "Mono", "Stereo", "Ping-Pong" }, 0));
+    layout.add(std::make_unique<MetaParameterChoice>("mode", "Mode", StringArray{ "Mono", "Stereo", "Ping-Pong" }, 0));
     layout.add(std::make_unique<AudioParameterInt>("ntaps", "Num Taps", 1, 16, 4));
     layout.add(std::make_unique<AudioParameterBool>("reverse", "Reverse", false));
     layout.add(std::make_unique<AudioParameterBool>("link", "Link", true));
     layout.add(std::make_unique<AudioParameterInt>("grid", "Grid", 0, 32, 0));
 
-    layout.add(std::make_unique<MetaParameterChoice>("time_mode", "Time Mode", StringArray{"Millis", "Straight", "Tripplet", "Dotted" }, 1));
-    layout.add(std::make_unique<MetaParameterChoice>("time_sync", "Time Sync", StringArray{"1/64", "1/32", "1/16", "1/8", "1/4", "1/2", "1/1"}, 4));
-    layout.add(std::make_unique<MetaParameterInt>("time_millis", "Time Millis", 1, 2000, 300));
+    layout.add(std::make_unique<AudioParameterChoice>("time_mode", "Time Mode", StringArray{"Millis", "Straight", "Tripplet", "Dotted" }, 1));
+    layout.add(std::make_unique<AudioParameterChoice>("time_sync", "Time Sync", StringArray{"1/64", "1/32", "1/16", "1/8", "1/4", "1/2", "1/1"}, 4));
+    layout.add(std::make_unique<AudioParameterInt>("time_millis", "Time Millis", 1, 2000, 300));
 
     for (int t = 0; t < MAX_TAPS; ++t)
     {
         String prefix = "tap" + String(t) + "_";
         String prefixnm = "Tap " + String(t + 1) + " ";
 
-        layout.add(std::make_unique<MetaParameterFloat>(prefix + "time_l", prefixnm + "Time Left %", NormalisableRange<float>(0.f, 10.f), 1.f));
-        layout.add(std::make_unique<MetaParameterFloat>(prefix + "time_r", prefixnm + "Time Right %", NormalisableRange<float>(0.f, 10.f), 1.f));
+        layout.add(std::make_unique<AudioParameterFloat>(prefix + "time_l", prefixnm + "Time Left %", NormalisableRange<float>(0.f, 10.f), 1.f));
+        layout.add(std::make_unique<AudioParameterFloat>(prefix + "time_r", prefixnm + "Time Right %", NormalisableRange<float>(0.f, 10.f), 1.f));
         layout.add(std::make_unique<AudioParameterFloat>(prefix + "amp_l", prefixnm + "Amp Left", NormalisableRange<float>(0.f, 1.f), 1.f));
         layout.add(std::make_unique<AudioParameterFloat>(prefix + "amp_r", prefixnm + "Amp Right", NormalisableRange<float>(0.f, 1.f), 1.f));
         layout.add(std::make_unique<AudioParameterFloat>(prefix + "feedback", prefixnm + "Feedback", NormalisableRange<float>(0.f, 1.f), 1.f));
@@ -261,6 +261,21 @@ bool SirialAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 
 void SirialAudioProcessor::onSlider()
 {
+    auto mode = (Delay::DelayMode)params.getRawParameterValue("mode")->load();
+    if (mode != lmode)
+    {
+        // make sure times are the same for left and right taps when switching to mono
+        if (mode == Delay::Mono)
+        {
+            for (int t = 0; t < MAX_TAPS; ++t)
+            {
+                auto prefix = "tap" + String(t) + "_";
+                auto tl = params.getParameter(prefix + "time_l")->getValue();
+                params.getParameter(prefix + "time_r")->setValueNotifyingHost(tl);
+            }
+        }
+        lmode = mode;
+    }
     delay->onSlider();
 }
 
@@ -474,13 +489,6 @@ void SirialAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
     buffer.applyGain(outGain);
 
     // prepare FFT buffer and RMS
-    auto ch0 = buffer.getReadPointer(0);
-    auto ch1 = buffer.getReadPointer(numChannels > 1 ? 1 : 0);
-    for (int i = 0; i < numSamples; ++i) {
-        eqFFTBuffer[eqFFTWriteIndex++] = 0.5f * (ch0[i] + ch1[i]);
-        eqFFTWriteIndex %= eqFFTBuffer.size();
-    }
-    eqFFTReady.store(true, std::memory_order_release);
     rmsLeft.store(buffer.getMagnitude(0, 0, numSamples));
     rmsRight.store(buffer.getMagnitude(numChannels > 1 ? 1 : 0, 0, numSamples));
 }

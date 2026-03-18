@@ -14,7 +14,9 @@ SirialAudioProcessorEditor::SirialAudioProcessorEditor (SirialAudioProcessor& p)
 
     audioProcessor.addChangeListener(this);
     audioProcessor.params.addParameterListener("mode", this);
+    audioProcessor.params.addParameterListener("link", this);
     audioProcessor.params.addParameterListener("reverse", this);
+    audioProcessor.params.addParameterListener("time_mode", this);
     audioProcessor.params.addParameterListener("pan_dry_sum", this);
     audioProcessor.params.addParameterListener("pan_wet_sum", this);
 
@@ -70,11 +72,91 @@ SirialAudioProcessorEditor::SirialAudioProcessorEditor (SirialAudioProcessor& p)
             savePreset();
         };
 
+
+    // DELAY VIEW TOOLBAR
     row += NAV_HEIGHT + 10;
+
+    addAndMakeVisible(modeBtn);
+    modeBtn.setAlpha(0.f);
+    modeBtn.setBounds(col, row, 70, 25);
+    modeBtn.onClick = [this] { showModeMenu(); };
+
+    addAndMakeVisible(tapsLabel);
+    tapsLabel.setText("Taps", dontSendNotification);
+    tapsLabel.setColour(Label::ColourIds::textColourId, Colour(COLOR_NEUTRAL));
+    tapsLabel.setFont(FontOptions(16.f));
+    tapsLabel.setJustificationType(Justification::centredLeft);
+    tapsLabel.setBounds(modeBtn.getBounds().withX(modeBtn.getRight() + 10).withWidth(40));
+
+    tapsPicker = std::make_unique<ValuePicker>(*this, "ntaps");
+    tapsPicker->setBounds(tapsLabel.getBounds().withX(tapsLabel.getRight() + 5).withWidth(35));
+    tapsPicker->precision = 0;
+    addAndMakeVisible(tapsPicker.get());
+
+    addAndMakeVisible(timeLabel);
+    timeLabel.setText("Step", dontSendNotification);
+    timeLabel.setColour(Label::ColourIds::textColourId, Colour(COLOR_NEUTRAL));
+    timeLabel.setFont(FontOptions(16.f));
+    timeLabel.setJustificationType(Justification::centredLeft);
+    timeLabel.setBounds(tapsPicker->getBounds().withX(tapsPicker->getRight() + 10).withWidth(45));
+    
+    tapsTimeMillis = std::make_unique<TimePicker>(*this, "time_millis");
+    addAndMakeVisible(tapsTimeMillis.get());
+    tapsTimeMillis->setBounds(timeLabel.getBounds().withX(timeLabel.getRight()).withWidth(70));
+
+    tapsTimeSync = std::make_unique<TimePicker>(*this, "time_sync");
+    tapsTimeSync->mode = 1;
+    addAndMakeVisible(tapsTimeSync.get());
+    tapsTimeSync->setBounds(timeLabel.getBounds().withX(timeLabel.getRight()).withWidth(70));
+
+    addAndMakeVisible(millisBtn);
+    millisBtn.setAlpha(0.f);
+    millisBtn.setBounds(tapsTimeSync->getBounds().withX(tapsTimeSync->getRight() + 10).withWidth(25));
+    millisBtn.onClick = [this]
+        {
+            auto param = audioProcessor.params.getParameter("time_mode");
+            param->setValueNotifyingHost(param->convertTo0to1(0.f));
+        };
+
+    addAndMakeVisible(straightBtn);
+    straightBtn.setAlpha(0.f);
+    straightBtn.setBounds(millisBtn.getBounds().withX(millisBtn.getRight() + 5));
+    straightBtn.onClick = [this]
+        {
+            auto param = audioProcessor.params.getParameter("time_mode");
+            param->setValueNotifyingHost(param->convertTo0to1(1.f));
+        };
+
+    addAndMakeVisible(tripletBtn);
+    tripletBtn.setAlpha(0.f);
+    tripletBtn.setBounds(straightBtn.getBounds().withX(straightBtn.getRight() + 5));
+    tripletBtn.onClick = [this]
+        {
+            auto param = audioProcessor.params.getParameter("time_mode");
+            param->setValueNotifyingHost(param->convertTo0to1(2.f));
+        };
+
+    addAndMakeVisible(dottedBtn);
+    dottedBtn.setAlpha(0.f);
+    dottedBtn.setBounds(tripletBtn.getBounds().withX(tripletBtn.getRight() + 5));
+    dottedBtn.onClick = [this]
+        {
+            auto param = audioProcessor.params.getParameter("time_mode");
+            param->setValueNotifyingHost(param->convertTo0to1(3.f));
+        };
+    
+    addAndMakeVisible(linkBtn);
+    linkBtn.setBounds(dottedBtn.getBounds().withX(dottedBtn.getRight() + 10).withWidth(50));
+    linkBtn.setAlpha(0.f);
+    linkBtn.onClick = [this]
+        {
+            auto param = audioProcessor.params.getParameter("link");
+            param->setValueNotifyingHost(param->getValue() > 0.f ? 0.f : 1.f);
+        };
 
     delayView = std::make_unique<DelayView>(*this);
     addAndMakeVisible(delayView.get());
-    delayView->setBounds(col, row + 25, KNOB_WIDTH * 7, 175);
+    delayView->setBounds(col, row + 35, KNOB_WIDTH * 7, 175);
 
     addAndMakeVisible(outGain);
     outGainAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.params, "out_gain", outGain);
@@ -119,7 +201,9 @@ SirialAudioProcessorEditor::~SirialAudioProcessorEditor()
     delete customLookAndFeel;
     audioProcessor.removeChangeListener(this);
     audioProcessor.params.removeParameterListener("mode", this);
+    audioProcessor.params.removeParameterListener("link", this);
     audioProcessor.params.removeParameterListener("reverse", this);
+    audioProcessor.params.removeParameterListener("time_mode", this);
     audioProcessor.params.removeParameterListener("pan_dry_sum", this);
     audioProcessor.params.removeParameterListener("pan_wet_sum", this);
 }
@@ -139,6 +223,12 @@ void SirialAudioProcessorEditor::parameterChanged (const juce::String& parameter
 
 void SirialAudioProcessorEditor::toggleUIComponents()
 {
+    auto link = (bool)audioProcessor.params.getRawParameterValue("link")->load();
+    linkBtn.setToggleState(link, dontSendNotification);
+
+    auto timeMode = (int)audioProcessor.params.getRawParameterValue("time_mode")->load();
+    tapsTimeMillis->setVisible(timeMode == 0);
+    tapsTimeSync->setVisible(timeMode > 0);
     MessageManager::callAsync([this] { repaint(); });
 }
 
@@ -178,6 +268,53 @@ void SirialAudioProcessorEditor::paint (Graphics& g)
     g.drawText("Sirial", logo.getBounds().expanded(0, 10), Justification::centredLeft);
     UIUtils::drawGear(g, settingsBtn.getBounds(), 9, 6, Colours::white, Colour(0xff3A2727));
     g.setFont(FontOptions(16.f));
+
+    // 
+    auto mode = (int)audioProcessor.params.getRawParameterValue("mode")->load();
+    UIUtils::drawBevel(g, modeBtn.getBounds().toFloat().translated(0.5f, 0.5f), BEVEL_CORNER, Colour(COLOR_BEVEL));
+    String modeText = mode == 0 ? "Mono" : mode == 1 ? "Stereo" : "Pipo";
+    g.setColour(Colours::white);
+    g.drawText(modeText, modeBtn.getBounds(), Justification::centred);
+
+    // 
+    UIUtils::drawBevel(g, tapsPicker->getBounds().toFloat().translated(0.5f, 0.5f), 3.f, Colour(COLOR_BEVEL));
+
+    // draw buttons
+    auto link = audioProcessor.params.getRawParameterValue("link")->load();
+    g.setColour(Colour(COLOR_ACTIVE));
+    if (link)
+    {
+        g.fillRoundedRectangle(linkBtn.getBounds().toFloat().translated(0.5f,0.5f), 3.f);
+        g.setColour(Colour(COLOR_BACKGROUND));
+    }
+    g.drawText("Link", linkBtn.getBounds(), Justification::centred);
+
+    auto timeMode = (int)audioProcessor.params.getRawParameterValue("time_mode")->load();
+
+    if (timeMode == 0)
+    {
+        g.setColour(Colour(COLOR_ACTIVE));
+        g.fillRoundedRectangle(millisBtn.getBounds().toFloat().translated(0.5f, 0.5f), 3.f);
+    }
+    UIUtils::drawClock(g, millisBtn.getBounds().toFloat().reduced(5.f), timeMode == 0 ? Colour(COLOR_BACKGROUND) : Colour(0xffffffff));
+    if (timeMode == 1)
+    {
+        g.setColour(Colour(COLOR_ACTIVE));
+        g.fillRoundedRectangle(straightBtn.getBounds().toFloat().translated(0.5f, 0.5f), 3.f);
+    }
+    UIUtils::drawNote(g, straightBtn.getBounds().toFloat(), 0, timeMode == 1 ? Colour(COLOR_BACKGROUND) : Colour(0xffffffff));
+    if (timeMode == 2)
+    {
+        g.setColour(Colour(COLOR_ACTIVE));
+        g.fillRoundedRectangle(tripletBtn.getBounds().toFloat().translated(0.5f, 0.5f), 3.f);
+    }
+    UIUtils::drawNote(g, tripletBtn.getBounds().toFloat(), 1, timeMode == 2 ? Colour(COLOR_BACKGROUND) : Colour(0xffffffff));
+    if (timeMode == 3)
+    {
+        g.setColour(Colour(COLOR_ACTIVE));
+        g.fillRoundedRectangle(dottedBtn.getBounds().toFloat().translated(0.5f, 0.5f), 3.f);
+    }
+    UIUtils::drawNote(g, dottedBtn.getBounds().toFloat(), 2, timeMode == 3 ? Colour(COLOR_BACKGROUND) : Colour(0xffffffff));
 }
 
 void SirialAudioProcessorEditor::resized()
@@ -196,6 +333,27 @@ void SirialAudioProcessorEditor::showSettings()
         [this](int result)
         {
             if (result == 0) return;
+        }
+    );
+}
+
+void SirialAudioProcessorEditor::showModeMenu()
+{
+    auto mode = (int)audioProcessor.params.getRawParameterValue("mode")->load();
+    PopupMenu menu;
+    menu.addItem(1, "Mono", true, mode == 0);
+    menu.addItem(2, "Stereo", true, mode == 1);
+    menu.addItem(3, "Ping-Pong", true, mode == 2);
+
+    auto menuPos = localPointToGlobal(modeBtn.getBounds().getBottomLeft());
+    menu.showMenuAsync(PopupMenu::Options()
+        .withTargetComponent(*this)
+        .withTargetScreenArea({ menuPos.getX(), menuPos.getY(), 1, 1 }),
+        [this](int result)
+        {
+            if (result == 0) return;
+            auto param = audioProcessor.params.getParameter("mode");
+            param->setValueNotifyingHost(param->convertTo0to1(result - 1.f));
         }
     );
 }

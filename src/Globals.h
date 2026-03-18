@@ -5,7 +5,6 @@ namespace globals {
 	constexpr float SQRT2 = 1.4142135623730951f;
 	constexpr float ISQRT2 = 0.7071067811865475f;
 	constexpr float EPSILON = 1e-6f;
-	constexpr int EQ_FFT_ORDER = 12;
 
 	// filter consts
 	constexpr float F_MIN_FREQ = 20.0f;
@@ -31,8 +30,8 @@ namespace globals {
 	constexpr unsigned int COLOR_KNOB = 0xff272727;
 	constexpr unsigned int COLOR_BEVEL = 0xff101010;
 	constexpr unsigned int COLOR_TAP = 0xff80FFFF;
-	constexpr unsigned int COLOR_TAP2 = 0xFFFF80FF;
-	constexpr unsigned int COLOR_TAP_HOVER = 0xFFFF0000;
+	constexpr unsigned int COLOR_TAP2 = 0xFFFF8040;
+	constexpr unsigned int COLOR_TAP_HOVER = 0xFF00ff00;
 	constexpr float BEVEL_CORNER = 5.f;
 	constexpr int KNOB_WIDTH = 70;
 	constexpr int KNOB_HEIGHT = 75;

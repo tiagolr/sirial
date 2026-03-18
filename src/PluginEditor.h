@@ -16,6 +16,8 @@
 #include "ui/About.h"
 #include "ui/Meter.h"
 #include "ui/DelayView.h"
+#include "ui/TimePicker.h"
+#include "ui/ValuePicker.h"
 
 using namespace globals;
 
@@ -37,6 +39,7 @@ public:
     void changeListenerCallback(ChangeBroadcaster* source) override;
     void showSettings();
     void showPresetsMenu();
+    void showModeMenu();
     void savePreset();
     void refreshOutGainLabel();
 
@@ -49,6 +52,18 @@ private:
     TextButton prevPresetBtn;
     TextButton saveBtn;
     std::unique_ptr<Meter> meter;
+
+    TextButton modeBtn;
+    Label tapsLabel;
+    std::unique_ptr<ValuePicker> tapsPicker;
+    Label timeLabel;
+    std::unique_ptr<TimePicker> tapsTimeSync;
+    std::unique_ptr<TimePicker> tapsTimeMillis;
+    TextButton millisBtn;
+    TextButton straightBtn;
+    TextButton tripletBtn;
+    TextButton dottedBtn;
+    TextButton linkBtn;
 
     std::unique_ptr<DelayView> delayView;
     std::unique_ptr<Rotary> mix;
