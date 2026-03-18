@@ -41,7 +41,9 @@ public:
         pitchSemis,
         semis2f,
         lofiSrate,
-        lofiBits
+        lofiBits,
+        filterLP,
+        filterHP,
     };
 
     Rotary(SirialAudioProcessor& p, juce::String paramId, juce::String name, RotaryLabel format,

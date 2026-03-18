@@ -46,6 +46,8 @@ void Delay::onSlider()
     if (rev != reverse) clear();
     reverse = rev;
     float globalFeedback = audioProcessor.params.getRawParameterValue("feedback")->load();
+    auto lowcut = audioProcessor.params.getRawParameterValue("lowcut")->load();
+    auto highcut = audioProcessor.params.getRawParameterValue("highcut")->load();
 
     for (int t = 0; t < ntaps; ++t)
     {
@@ -60,6 +62,7 @@ void Delay::onSlider()
             useGlobalFeedback ? globalFeedback :
             audioProcessor.params.getRawParameterValue(prefix + "feedback")->load()
         );
+        tap.setDamping(lowcut, highcut);
     }
 
     timeMode = (TimeMode)audioProcessor.params.getRawParameterValue("time_mode")->load();
@@ -157,6 +160,8 @@ void Delay::processBlock(float* left, float* right, int nsamps)
             float rtime = tap.stimeR.process((float)tap.timeR);
             float l = tap.left.read3(ltime);
             float r = tap.right.read3(rtime);
+            l = tap.leftHP.processHP(tap.leftLP.processLP(l));
+            r = tap.rightHP.processHP(tap.rightLP.processLP(l));
             lfeed[t] = l;
             rfeed[t] = r;
         }

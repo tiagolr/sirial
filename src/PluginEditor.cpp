@@ -169,7 +169,18 @@ SirialAudioProcessorEditor::SirialAudioProcessorEditor (SirialAudioProcessor& p)
     addAndMakeVisible(feedback.get());
     feedback->setBounds(mix->getBounds().translated(KNOB_WIDTH, 0));
 
-    // 
+    // RIGHT OF DELAY VIEW
+    col = delayView->getRight() + 10;
+
+    lowcut = std::make_unique<Rotary>(audioProcessor, "lowcut", "Lowcut", Rotary::filterHP);
+    addAndMakeVisible(lowcut.get());
+    lowcut->setBounds(col, row + 25, KNOB_WIDTH, KNOB_HEIGHT);
+
+    highcut = std::make_unique<Rotary>(audioProcessor, "highcut", "Highcut", Rotary::filterLP);
+    addAndMakeVisible(highcut.get());
+    highcut->setBounds(lowcut->getBounds().translated(0, KNOB_HEIGHT + 5));
+
+    //
 
     addAndMakeVisible(outGain);
     outGainAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.params, "out_gain", outGain);

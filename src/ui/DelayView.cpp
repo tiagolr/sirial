@@ -180,7 +180,7 @@ void DelayView::mouseDrag(const MouseEvent& e)
 		float pos = std::clamp(tap.timeR + slider_change, 0.f, 10.f);
 		float posnxt = std::clamp(nextTap.timeR - slider_change, 0.f, 10.f);
 
-		// snap left channel to right channel, removes haas
+		// snap right channel to left channel, removes haas
 		if (mode != Delay::Mono && !link && std::fabs(pos - tap.timeL) < 1e-2)
 		{
 			if (std::fabs(tap.snapacc) < 0.05)

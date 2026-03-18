@@ -35,6 +35,55 @@ public:
 		k1o1
 	};
 
+	struct OnePole
+	{
+		float srate = 44100.f;
+		float freq = -1.f;
+		float g_targ = 1.f;
+		float g = 0.f;
+		float s1 = 0.f;
+
+		void setup(float _srate) 
+		{
+			srate = _srate;
+			float f = freq;
+			freq = -1;
+			init(f);
+			g = g_targ;
+		}
+
+		void init(float _freq)
+		{
+			if (freq == _freq) return;
+			freq = _freq;
+			g_targ = std::tan(MathConstants<float>::pi * std::fmin(freq / srate, 0.49f));
+			g_targ = g_targ / (1.0f + g_targ);
+		}
+
+		float processLP(float x)
+		{
+			if (freq >= 20000.f) return x;
+			float delta = g * (x - s1);
+			s1 += delta;
+			g += (g_targ - g) * 0.005f;
+			return s1;
+		}
+
+		float processHP(float x)
+		{
+			if (freq <= 20.f) return x;
+			float delta = g * (x - s1);
+			s1 += delta;
+			g += (g_targ - g) * 0.005f;
+			return x - s1;
+		}
+
+		void clear()
+		{
+			s1 = 0.f;
+		}
+	};
+
 	struct Tap
 	{
 		float timePercL;
@@ -50,17 +99,29 @@ public:
 		bool globalFeedback;
 		DelayLine left;
 		DelayLine right;
+		OnePole leftLP;
+		OnePole leftHP;
+		OnePole rightLP;
+		OnePole rightHP;
 
 		void clear()
 		{
 			left.clear();
 			right.clear();
+			leftLP.clear();
+			leftHP.clear();
+			rightLP.clear();
+			rightHP.clear();
 		}
 
 		void setup(float srate)
 		{
 			stimeL.setup(0.15f, srate);
 			stimeR.setup(0.15f, srate);
+			leftLP.setup(srate);
+			leftHP.setup(srate);
+			rightLP.setup(srate);
+			rightHP.setup(srate);
 		}
 
 		// balances left and right feedback
@@ -78,6 +139,14 @@ public:
 				feedbackL = fb;
 				feedbackR = std::pow(fb, e);
 			}
+		}
+
+		void setDamping(float lowcut, float highcut)
+		{
+			leftLP.init(highcut);
+			rightLP.init(highcut);
+			leftHP.init(lowcut);
+			rightHP.init(lowcut);
 		}
 	};
 

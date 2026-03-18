@@ -166,6 +166,26 @@ void Rotary::draw_label_value(juce::Graphics& g, float slider_val)
             }
             text = ss.str();
         }
+        else if (format == RotaryLabel::filterLP) {
+            if (slider_val < 1000) {
+                ss << std::fixed << std::setprecision(0) << slider_val << " Hz";
+            }
+            else {
+                ss << std::fixed << std::setprecision(1) << slider_val / 1000.0 << " kHz";
+            }
+            text = ss.str();
+            if (slider_val >= 20000.f) text = "Off";
+        }
+        else if (format == RotaryLabel::filterHP) {
+            if (slider_val < 1000) {
+                ss << std::fixed << std::setprecision(0) << slider_val << " Hz";
+            }
+            else {
+                ss << std::fixed << std::setprecision(1) << slider_val / 1000.0 << " kHz";
+            }
+            text = ss.str();
+            if (slider_val <= 20.f) text = "Off";
+        }
         else if (format == RotaryLabel::hzLp) {
             if (slider_val >= 20000) {
                 ss << "Off";

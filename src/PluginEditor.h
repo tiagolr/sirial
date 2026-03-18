@@ -69,6 +69,9 @@ private:
     std::unique_ptr<Rotary> mix;
     std::unique_ptr<Rotary> feedback;
 
+    std::unique_ptr<Rotary> lowcut;
+    std::unique_ptr<Rotary> highcut;
+
     Slider outGain;
     Label outGainLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> outGainAttachment;
