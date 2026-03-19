@@ -29,7 +29,7 @@ namespace globals {
 	constexpr unsigned int COLOR_NEUTRAL = 0xff666666;
 	constexpr unsigned int COLOR_KNOB = 0xff272727;
 	constexpr unsigned int COLOR_BEVEL = 0xff101010;
-	constexpr unsigned int COLOR_TAP = 0xff80ffff;
+	constexpr unsigned int COLOR_TAP = 0xff80FFFF;
 	constexpr unsigned int COLOR_TAP2 = 0xffFE9E37;
 	constexpr unsigned int COLOR_TAP_HOVER = 0xFF00ff00;
 	constexpr float BEVEL_CORNER = 5.f;
@@ -43,8 +43,8 @@ namespace globals {
 	constexpr float ENV_MAX_RELEASE = 10000.0f;
 
 	// view consts
-	constexpr int PLUG_WIDTH = 15 * 3 + 10 * 2 + 70 * 10 + 25; // plug padding + hseparator + knob width + meter
-	constexpr int PLUG_HEIGHT = 15 * 2 + 20 + 10 * 3 + 20 + 75 * 3 + 35; // plug padding + vsep + header + knob height + nav
+	constexpr int PLUG_WIDTH = 775; // plug padding
+	constexpr int PLUG_HEIGHT = 360; // plug padding
 	constexpr int MAX_PLUG_WIDTH = 640 * 3;
 	constexpr int MAX_PLUG_HEIGHT = 650 * 2;
 	constexpr int PLUG_PADDING = 15;

@@ -71,6 +71,21 @@ AudioProcessorValueTreeState::ParameterLayout SirialAudioProcessor::createParame
 
     layout.add(std::make_unique<AudioParameterFloat>("out_gain", "Mix", -18.f, 18.f, 0.0f));
 
+    // FX
+    layout.add(std::make_unique<AudioParameterFloat>("dist_drive", "Sat Drive", 0.f, 1.f, 0.0f));
+    layout.add(std::make_unique<AudioParameterFloat>("dist_color", "Sat Color", 0.f, 1.f, 0.0f));
+    layout.add(std::make_unique<AudioParameterChoice>("dist_path", "Sat Path", StringArray{ "Pre", "Post" }, 0));
+
+    layout.add(std::make_unique<AudioParameterFloat>("diff_amt", "Diffusion Amt", 0.f, 1.f, 0.0f));
+    layout.add(std::make_unique<AudioParameterFloat>("diff_size", "Diffusion Size", 0.f, 1.f, 0.0f));
+    layout.add(std::make_unique<AudioParameterChoice>("diff_path", "Diffusion Path", StringArray{ "Pre", "Post" }, 0));
+
+    layout.add(std::make_unique<AudioParameterFloat>("duck_thres", "Duck Threshold", NormalisableRange<float>(0.0f, 1.f-0.001f, 0.001f, 3.f), 1.f-0.001f));
+    layout.add(std::make_unique<AudioParameterFloat>("duck_amt", "Duck Amount", NormalisableRange<float>(0.f, 1.f - 0.001f, 0.001f, 3.f), 0.0f));
+    layout.add(std::make_unique<AudioParameterFloat>("duck_atk", "Duck Attack", NormalisableRange<float>(0.01f, 200.0f, 0.01f, 0.75f), 5.f));
+    layout.add(std::make_unique<AudioParameterFloat>("duck_hld", "Duck Hold", NormalisableRange<float>(0.0f, 1000.0f), 0.f));
+    layout.add(std::make_unique<AudioParameterFloat>("duck_rel", "Duck Release", NormalisableRange<float>(10.f, 5000.0f, 1.f, 0.5f), 500.f));
+
     return layout;
 }
 
@@ -103,7 +118,16 @@ SirialAudioProcessor::SirialAudioProcessor()
 
     loadSettings();
 
+    String presetsFolder = options
+        .getDefaultFile()
+        .getParentDirectory()
+        .getChildFile("presets")
+        .getFullPathName();
+
+    presetmgr = std::make_unique<PresetMgr>(*this, presetsFolder);
     delay = std::make_unique<Delay>(*this);
+    dist = std::make_unique<Distortion>(*this);
+    diffusor = std::make_unique<Diffusor>();
 }
 
 SirialAudioProcessor::~SirialAudioProcessor()
@@ -226,6 +250,7 @@ void SirialAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
 {
     wetBuffer.setSize (2, samplesPerBlock);
     srate = sampleRate;
+    diffusor->prepare((float)srate);
     onSlider();
     sendChangeMessage();
 }
@@ -277,12 +302,28 @@ void SirialAudioProcessor::onSlider()
         }
         lmode = mode;
     }
+
+    float thresh = 1.f - params.getRawParameterValue("duck_thres")->load();
+    float attack = params.getRawParameterValue("duck_atk")->load();
+    float hold = params.getRawParameterValue("duck_hld")->load();
+    float release = params.getRawParameterValue("duck_rel")->load();
+    follower.prepare((float)srate, thresh, false, attack, hold, release, true);
+
+    distPath = (int)params.getRawParameterValue("dist_path")->load();
+    float diffsize = params.getRawParameterValue("diff_size")->load();
+    diffPath = (int)params.getRawParameterValue("diff_path")->load();
+    diffusor->setSize(diffsize);
+    diffAmt = params.getRawParameterValue("diff_amt")->load();
+    dist->onSlider();
     delay->onSlider();
+    duckAmt = params.getRawParameterValue("duck_amt")->load();
 }
 
 void SirialAudioProcessor::clearAll()
 {
     delay->clear();
+    dist->clear();
+    diffusor->clear();
 }
 
 bool SirialAudioProcessor::supportsDoublePrecisionProcessing() const
@@ -365,12 +406,73 @@ void SirialAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
         wetBuffer.copyFrom(1, 0, buffer, 1, 0, numSamples);
     }
 
+    // process pre distortion
+    if (distPath == 0 && dist->drive > 0.f)
+    {
+        float* l = wetBuffer.getWritePointer(0);
+        float* r = wetBuffer.getWritePointer(1);
+        dist->processBlock(l, r, numSamples);
+    }
+
+    // process pre diffusion
+    if (diffPath == 0 && diffAmt > 0.f)
+    {
+        float diffdry = Utils::cosHalfPi()(diffAmt);
+        float diffwet = Utils::sinHalfPi()(diffAmt);
+        diffusor->processBlock(
+            wetBuffer.getWritePointer(0),
+            wetBuffer.getWritePointer(1),
+            numSamples, diffdry, diffwet
+        );
+    }
+
     // process delay
     delay->processBlock(
         wetBuffer.getWritePointer(0),
         wetBuffer.getWritePointer(1),
         numSamples
     );
+
+    // process post distortion
+    if (distPath == 1 && dist->drive > 0.f)
+    {
+        float* l = wetBuffer.getWritePointer(0);
+        float* r = wetBuffer.getWritePointer(1);
+        dist->processBlock(l, r, numSamples);
+    }
+
+    // process post diffusion
+    if (diffPath == 1 && diffAmt > 0.f)
+    {
+        float diffdry = Utils::cosHalfPi()(diffAmt);
+        float diffwet = Utils::sinHalfPi()(diffAmt);
+        diffusor->processBlock(
+            wetBuffer.getWritePointer(0),
+            wetBuffer.getWritePointer(1),
+            numSamples, diffdry, diffwet
+        );
+    }
+
+    // apply ducking
+    if (duckAmt > 0.f)
+    {
+        for (int i = 0; i < numSamples; ++i)
+        {
+            float env = follower.process(
+                buffer.getSample(0, i),
+                buffer.getSample(numChannels > 1 ? 1 : 0, i)
+            );
+
+            float gain = 1.f - env * duckAmt;
+            wetBuffer.setSample(0, i, wetBuffer.getSample(0, i) * gain);
+            wetBuffer.setSample(1, i, wetBuffer.getSample(1, i) * gain);
+        }
+    }
+    else
+    {
+        follower.clear();
+    }
+    duckEnv.store(follower.envelope * duckAmt);
 
     // mix and pan
 

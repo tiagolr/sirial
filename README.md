@@ -35,21 +35,12 @@ This plug-in doesn't include many effects since applying them on each tap can be
 
 ## Features
 
-  * **Stereo Dual Delay** with independent delay times and multiple modes.
-  * **Ping-Pong mode** with feedback width control.
-  * **Tap mode** with offset time (tap) and delay time.
-  * **Swing and Feel** offset.
-  * **Accent** odd or even taps.
-  * **Reverse** delay.
-  * **Parametric EQ** on feedback and input signal.
-  * **Diffusion** on pre or post delay signal.
-  * **Modulation** of delay line time.
-  * **Pitch Shifter** on the feedback or post delay signal.
-  * **Saturation** on pre and post delay signal (optionally on Feedback path).
-  * **Color, Bias and Dynamics** controls for saturation.
-  * **Ducking** to muffle the delayed signal on input.
-  * **Tape wow and flutter** to add tone variation.
-  * **Taps preview** display.
+  * **16 Serial Delay Lines** allows to build intricate delay patterns
+  * **Stereo Patterns** with different offsets for left and right taps
+  * **Ping-Pong Mode** where the feedback is crossed on each tap
+  * **Delay Reverse** mode
+  * **Basic Effects** like damping, saturation and diffusion
+  * **Ducking** with controls for threshold, amount, attack and release
 
 ## Download
 
@@ -79,6 +70,7 @@ git clone --recurse-submodules https://github.com/tiagolr/sirial.git
 
 # windows
 cmake -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Release -S . -B ./build
+cmake --build build
 
 # linux
 sudo apt update

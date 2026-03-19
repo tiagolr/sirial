@@ -34,6 +34,24 @@ public:
         return juce::Font(FontOptions(19.0f));
     }
 
+    void drawTooltip(juce::Graphics& g, const juce::String& text, int width, int height) override
+    {
+        const int padding = 10;
+        juce::Rectangle<float> area(0, 0, (float)width, (float)height);
+
+        g.setColour(findColour(juce::TooltipWindow::backgroundColourId));
+        g.fillRoundedRectangle(area, 4.0f);
+
+        juce::AttributedString s;
+        s.setJustification(juce::Justification::centredLeft);
+        s.append(text, juce::Font(FontOptions(16.f)),
+            findColour(juce::TooltipWindow::textColourId));
+
+        juce::TextLayout tl;
+        tl.createLayout(s, (float)width - 2 * padding);
+        tl.draw(g, area.reduced((float)padding));
+    }
+
     void drawTreeviewPlusMinusBox(Graphics& g, const Rectangle<float>& area,
         juce::Colour backgroundColour, bool isOpen, bool isMouseOver) override;
 

@@ -18,6 +18,7 @@
 #include "ui/DelayView.h"
 #include "ui/TimePicker.h"
 #include "ui/ValuePicker.h"
+#include "ui/DuckMeter.h"
 
 using namespace globals;
 
@@ -51,6 +52,7 @@ private:
     TextButton nextPresetBtn;
     TextButton prevPresetBtn;
     TextButton saveBtn;
+    TextButton reverseBtn;
     std::unique_ptr<Meter> meter;
 
     TextButton modeBtn;
@@ -68,9 +70,24 @@ private:
     std::unique_ptr<DelayView> delayView;
     std::unique_ptr<Rotary> mix;
     std::unique_ptr<Rotary> feedback;
+    TextButton panDrySumBtn;
+    TextButton panWetSumBtn;
+    std::unique_ptr<Rotary> panDry;
+    std::unique_ptr<Rotary> panWet;
+    std::unique_ptr<Rotary> stereo;
 
     std::unique_ptr<Rotary> lowcut;
     std::unique_ptr<Rotary> highcut;
+    std::unique_ptr<Rotary> distDrive;
+    std::unique_ptr<Rotary> distColor;
+    std::unique_ptr<Rotary> diffAmt;
+    std::unique_ptr<Rotary> diffSize;
+
+    std::unique_ptr<Rotary> duckThres;
+    std::unique_ptr<Rotary> duckAmt;
+    std::unique_ptr<Rotary> duckAtk;
+    std::unique_ptr<Rotary> duckRel;
+    std::unique_ptr<DuckMeter> duckMeter;
 
     Slider outGain;
     Label outGainLabel;

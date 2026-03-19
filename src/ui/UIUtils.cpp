@@ -273,3 +273,12 @@ void UIUtils::drawSave(Graphics& g, Rectangle<float>bounds, Colour c)
     g.setColour(c);
     g.strokePath(p, PathStrokeType(1.0f, PathStrokeType::beveled));
 }
+
+void UIUtils::drawReverse(Graphics& g, juce::Rectangle<float> b, Colour color)
+{
+    b = b.translated(0.5f, 0.5f);
+    g.setColour(color);
+    float r = 5.f;
+    UIUtils::drawTriangle(g, Rectangle<float>(r * 2, r * 2).withX(b.getCentreX() - r * 2 + 1).withY(b.getCentreY() - r), 3, color);
+    UIUtils::drawTriangle(g, Rectangle<float>(r * 2, r * 2).withX(b.getCentreX() - 1).withY(b.getCentreY() - r), 3, color);
+}

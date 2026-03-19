@@ -12,6 +12,10 @@
 #include <vector>
 #include "Globals.h"
 #include "dsp/Delay.h"
+#include "dsp/Follower.h"
+#include "dsp/Distortion.h"
+#include "dsp/Diffusor.h"
+#include "PresetMgr.h"
 
 using namespace globals;
 
@@ -26,6 +30,16 @@ class SirialAudioProcessor
 public:
     std::unique_ptr<Delay> delay;
     AudioBuffer<float> wetBuffer;
+    std::unique_ptr<Distortion> dist;
+    Follower follower;
+    std::unique_ptr<Diffusor> diffusor;
+    int diffPath = 0; // pre or post delay diffusion
+    float diffAmt = 0.f;
+    int distPath = 0; // pre or post saturation
+    float distAmt = 0.f;
+    float duckAmt = 0.f;
+    std::unique_ptr<PresetMgr> presetmgr;
+
 
     // Plugin settings
     float scale = 1.0f; // UI scale factor

@@ -153,6 +153,7 @@ SirialAudioProcessorEditor::SirialAudioProcessorEditor (SirialAudioProcessor& p)
     delayView->setBounds(col, row + 35, KNOB_WIDTH * 7, 185);
 
     addAndMakeVisible(linkBtn);
+    linkBtn.setTooltip("Move left and right taps at the same time");
     linkBtn.setBounds(dottedBtn.getBounds().withWidth(25).withRightX(delayView->getRight()));
     linkBtn.setAlpha(0.f);
     linkBtn.onClick = [this]
@@ -172,6 +173,38 @@ SirialAudioProcessorEditor::SirialAudioProcessorEditor (SirialAudioProcessor& p)
     addAndMakeVisible(feedback.get());
     feedback->setBounds(mix->getBounds().translated(KNOB_WIDTH, 0));
 
+    panDry = std::make_unique<Rotary>(audioProcessor, "pan_dry", "Pan Dry", Rotary::pan, true);
+    addAndMakeVisible(panDry.get());
+    panDry->setBounds(feedback->getBounds().translated(KNOB_WIDTH + 30, 0));
+
+    panWet = std::make_unique<Rotary>(audioProcessor, "pan_wet", "Pan Wet", Rotary::pan, true);
+    addAndMakeVisible(panWet.get());
+    panWet->setBounds(panDry->getBounds().translated(KNOB_WIDTH, 0));
+
+    stereo = std::make_unique<Rotary>(audioProcessor, "stereo", "Stereo", Rotary::percx100, true);
+    addAndMakeVisible(stereo.get());
+    stereo->setBounds(panWet->getBounds().translated(KNOB_WIDTH, 0));
+
+    addAndMakeVisible(panDrySumBtn);
+    panDrySumBtn.setBounds(Rectangle<int>(20, 20).withY(panDry->getY()).withRightX(panDry->getRight() + 5));
+    panDrySumBtn.setTooltip("Sum channels or collapse when panning.");
+    panDrySumBtn.setAlpha(0.f);
+    panDrySumBtn.onClick = [this]
+        {
+            auto param = audioProcessor.params.getParameter("pan_dry_sum");
+            param->setValueNotifyingHost(param->getValue() > 0.f ? 0.f : 1.f);
+        };
+
+    addAndMakeVisible(panWetSumBtn);
+    panWetSumBtn.setBounds(Rectangle<int>(20, 20).withY(panWet->getY()).withRightX(panWet->getRight() + 5));
+    panWetSumBtn.setAlpha(0.f);
+    panWetSumBtn.setTooltip("Sum channels or collapse when panning.");
+    panWetSumBtn.onClick = [this]
+        {
+            auto param = audioProcessor.params.getParameter("pan_wet_sum");
+            param->setValueNotifyingHost(param->getValue() > 0.f ? 0.f : 1.f);
+        };
+
     // RIGHT OF DELAY VIEW
     col = delayView->getRight() + 10;
 
@@ -183,7 +216,55 @@ SirialAudioProcessorEditor::SirialAudioProcessorEditor (SirialAudioProcessor& p)
     addAndMakeVisible(highcut.get());
     highcut->setBounds(lowcut->getBounds().translated(0, KNOB_HEIGHT + 5));
 
+    distDrive = std::make_unique<Rotary>(audioProcessor, "dist_drive", "Drive", Rotary::percx100);
+    addAndMakeVisible(distDrive.get());
+    distDrive->setBounds(lowcut->getBounds().translated(KNOB_WIDTH, 0));
+
+    distColor = std::make_unique<Rotary>(audioProcessor, "dist_color", "Color", Rotary::percx100);
+    addAndMakeVisible(distColor.get());
+    distColor->setBounds(distDrive->getBounds().translated(0, KNOB_HEIGHT));
+
+    diffAmt = std::make_unique<Rotary>(audioProcessor, "diff_amt", "Amount", Rotary::percx100);
+    addAndMakeVisible(diffAmt.get());
+    diffAmt->setBounds(distDrive->getBounds().translated(KNOB_WIDTH, 0));
+
+    diffSize = std::make_unique<Rotary>(audioProcessor, "diff_size", "Size", Rotary::percx100);
+    addAndMakeVisible(diffSize.get());
+    diffSize->setBounds(diffAmt->getBounds().translated(0, KNOB_HEIGHT));
+
+    // DUCKING
+
+    duckAmt = std::make_unique<Rotary>(audioProcessor, "duck_amt", "Amount", Rotary::gainTodB1fInv);
+    addAndMakeVisible(duckAmt.get());
+    duckAmt->setBounds(highcut->getBounds().withBottomY(getHeight() - PLUG_PADDING));
+
+    duckThres = std::make_unique<Rotary>(audioProcessor, "duck_thres", "Thresh", Rotary::gainTodB1fInv);
+    addAndMakeVisible(duckThres.get());
+    duckThres->setBounds(duckAmt->getBounds().translated(-KNOB_WIDTH, 0));
+
+    duckAtk = std::make_unique<Rotary>(audioProcessor, "duck_atk", "Atk", Rotary::kMillis);
+    addAndMakeVisible(duckAtk.get());
+    duckAtk->setBounds(duckAmt->getBounds().translated(KNOB_WIDTH, 0));
+
+    duckRel = std::make_unique<Rotary>(audioProcessor, "duck_rel", "Rel", Rotary::kMillis);
+    addAndMakeVisible(duckRel.get());
+    duckRel->setBounds(duckAtk->getBounds().translated(KNOB_WIDTH, 0));
+
+    duckMeter = std::make_unique<DuckMeter>(audioProcessor);
+    addAndMakeVisible(duckMeter.get());
+    duckMeter->setBounds(duckAtk->getBounds().withHeight(20).translated(0, -25));
+
     //
+
+    addAndMakeVisible(reverseBtn);
+    reverseBtn.setAlpha(0.f);
+    reverseBtn.setTooltip("Reverse mode");
+    reverseBtn.setBounds(Rectangle<int>(25, 25).withX(feedback->getRight() -10).withY(feedback->getY()));
+    reverseBtn.onClick = [this]
+        {
+            auto param = audioProcessor.params.getParameter("reverse");
+            param->setValueNotifyingHost(param->getValue() > 0.f ? 0.f : 1.f);
+        };
 
     addAndMakeVisible(outGain);
     outGainAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.params, "out_gain", outGain);
@@ -297,15 +378,20 @@ void SirialAudioProcessorEditor::paint (Graphics& g)
     auto color = Colours::white;
     g.setColour(color);
 
-    String text = "SIRIAL";
+    juce::String text = "SIRIAL";
     float x = (float)logo.getX();
-    float y = (float)logo.getY();
+    float y = (float)logo.getY() + f.getAscent() + 4;
+    g.setColour(juce::Colours::white);
     for (auto c : text)
     {
+        juce::GlyphArrangement glyph;
         juce::String s = juce::String::charToString(c);
-        g.drawText(s, Rectangle<float>(x, y, (float)100, (float)NAV_HEIGHT), juce::Justification::left);
 
-        x += f.getStringWidthFloat(s) + 4.f;
+        glyph.addLineOfText(f, s, x, y);
+        glyph.draw(g);
+
+        auto bounds = glyph.getBoundingBox(0, -1, false);
+        x += bounds.getWidth() + 4.0f;
     }
     //g.drawText("SIRIAL", logo.getBounds().expanded(0, 10), Justification::centredLeft);
     UIUtils::drawGear(g, settingsBtn.getBounds(), 9, 6, color, Colour(0xff242D3A));
@@ -391,6 +477,27 @@ void SirialAudioProcessorEditor::paint (Graphics& g)
     g.drawText("DAMP", Rectangle<int>(KNOB_WIDTH, 25).withX(lowcut->getX()).withY(lowcut->getY() - 25), Justification::centred);
     g.drawText("SAT", Rectangle<int>(KNOB_WIDTH, 25).withX(lowcut->getX() + KNOB_WIDTH).withY(lowcut->getY() - 25), Justification::centred);
     g.drawText("DIFF", Rectangle<int>(KNOB_WIDTH, 25).withX(lowcut->getX() + KNOB_WIDTH * 2).withY(lowcut->getY() - 25), Justification::centred);
+    g.drawText("DUCK", duckMeter->getBounds().translated(-KNOB_WIDTH, 0), Justification::centred);
+
+    // paint pan sum buttons
+    bool panDrySum = (bool)audioProcessor.params.getRawParameterValue("pan_dry_sum")->load();
+    bool panWetSum = (bool)audioProcessor.params.getRawParameterValue("pan_wet_sum")->load();
+    float r = 5;
+    int cx = panDrySumBtn.getBounds().getCentreX();
+    int cy = panDrySumBtn.getBounds().getCentreY();
+
+    g.setColour(Colour(panDrySum ? COLOR_ACTIVE : COLOR_NEUTRAL));
+    g.drawEllipse(cx - r * 1.5f, cy - r, r * 2, r * 2, 1.f);
+    g.fillEllipse((float)cx - r * 0.5f, cy - r, r * 2, r * 2);
+
+    cx = panWetSumBtn.getBounds().getCentreX();
+    cy = panWetSumBtn.getBounds().getCentreY();
+    g.setColour(Colour(panWetSum ? COLOR_ACTIVE : COLOR_NEUTRAL));
+    g.drawEllipse(cx - r * 1.5f, cy - r, r * 2, r * 2, 1.f);
+    g.fillEllipse((float)cx - r * 0.5f, cy - r, r * 2, r * 2);
+
+    auto reverse = (int)audioProcessor.params.getRawParameterValue("reverse")->load();
+    UIUtils::drawReverse(g, reverseBtn.getBounds().toFloat().reduced(3.f,0.f).translated(0, -3.f), Colour(reverse ? COLOR_ACTIVE : COLOR_NEUTRAL));
 }
 
 void SirialAudioProcessorEditor::resized()
@@ -400,7 +507,23 @@ void SirialAudioProcessorEditor::resized()
 
 void SirialAudioProcessorEditor::showSettings()
 {
+    int diffPath = (int)audioProcessor.params.getRawParameterValue("diff_path")->load();
+    int distPath = (int)audioProcessor.params.getRawParameterValue("dist_path")->load();
+
+    PopupMenu scaleMenu;
+    scaleMenu.addItem(50, "100%", true, std::fabs(audioProcessor.scale - 1.0f) < 1e-5);
+    scaleMenu.addItem(51, "125%", true, std::fabs(audioProcessor.scale - 1.25f) < 1e-5);
+    scaleMenu.addItem(52, "150%", true, std::fabs(audioProcessor.scale - 1.5f) < 1e-5);
+    scaleMenu.addItem(53, "175%", true, std::fabs(audioProcessor.scale - 1.75f) < 1e-5);
+    scaleMenu.addItem(54, "200%", true, std::fabs(audioProcessor.scale - 2.0f) < 1e-5);
+
     PopupMenu menu;
+    menu.addSubMenu("UI Scale", scaleMenu);
+    menu.addSeparator();
+    menu.addItem(10, "Post Saturation", true, distPath == 1);
+    menu.addItem(11, "Post Diffusion", true, diffPath == 1);
+    menu.addSeparator();
+    menu.addItem(9999, "About");
 
     auto menuPos = localPointToGlobal(settingsBtn.getBounds().getBottomLeft());
     menu.showMenuAsync(PopupMenu::Options()
@@ -409,6 +532,27 @@ void SirialAudioProcessorEditor::showSettings()
         [this](int result)
         {
             if (result == 0) return;
+            else if (result == 9999)
+                about->setVisible(true);
+            else if (result == 10)
+            {
+                auto param = audioProcessor.params.getParameter("dist_path");
+                param->setValueNotifyingHost(param->getValue() > 0.f ? 0.f : 1.f);
+            }
+            else if (result == 11)
+            {
+                auto param = audioProcessor.params.getParameter("diff_path");
+                param->setValueNotifyingHost(param->getValue() > 0.f ? 0.f : 1.f);
+            }
+            else if (result >= 50 && result <= 54)
+            {
+                if (result == 50) audioProcessor.setScale(1.f);
+                if (result == 51) audioProcessor.setScale(1.25f);
+                if (result == 52) audioProcessor.setScale(1.5f);
+                if (result == 53) audioProcessor.setScale(1.75f);
+                if (result == 54) audioProcessor.setScale(2.f);
+                Desktop::getInstance().setGlobalScaleFactor(audioProcessor.scale);
+            }
         }
     );
 }
@@ -436,7 +580,6 @@ void SirialAudioProcessorEditor::showModeMenu()
 
 void SirialAudioProcessorEditor::showPresetsMenu()
 {
-    /*
     PopupMenu menu;
     PopupMenu basicPresets;
     PopupMenu drumsPresets;
@@ -487,12 +630,10 @@ void SirialAudioProcessorEditor::showPresetsMenu()
             }
         }
     );
-    */
 }
 
 void SirialAudioProcessorEditor::savePreset()
 {
-    /*
     auto dir = File(audioProcessor.presetmgr->dir);
     fileChooser.reset(new juce::FileChooser("Save Preset", dir, "*.xml"));
     fileChooser->launchAsync(juce::FileBrowserComponent::saveMode | FileBrowserComponent::warnAboutOverwriting,
@@ -508,8 +649,6 @@ void SirialAudioProcessorEditor::savePreset()
             file.replaceWithText(filestr);
             MessageManager::callAsync([this] { repaint(); });
         });
-
-    */
 }
 
 void SirialAudioProcessorEditor::refreshOutGainLabel()

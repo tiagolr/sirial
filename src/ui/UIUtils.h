@@ -24,4 +24,5 @@ static void drawHighShelf(Graphics& g, Rectangle<float> bounds, Colour c, float 
 static void drawHighpass(Graphics& g, Rectangle<float> bounds, Colour c, float scale = 1.f);
 static void drawLowpass(Graphics& g, Rectangle<float> bounds, Colour c, float scale = 1.f);
 static void drawSave(Graphics& g, Rectangle<float> bounds, Colour c);
+static void drawReverse(Graphics& g, Rectangle<float> bounds, Colour c);
 };
