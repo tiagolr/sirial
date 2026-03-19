@@ -359,7 +359,7 @@ void DelayView::drawGrid(Graphics& g)
 		g.drawLine(viewb.getX(), y, viewb.getX() + viewb.getWidth(), y);
 	}
 
-	g.setFont(FontOptions(12.f));
+	g.setFont(FontOptions(14.f));
 	for (int i = 1; i <= ntaps; ++i)
 	{
 		int num = i;

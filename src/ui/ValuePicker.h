@@ -11,7 +11,7 @@ class ValuePicker
     , private juce::AudioProcessorValueTreeState::Listener
 {
 public:
-	float fontSize = 16.f;
+	float fontSize = 18.f;
 	bool isInteger = false;
 	String suffix = "";
 	String prefix = "";

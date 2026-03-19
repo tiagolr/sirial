@@ -98,7 +98,7 @@ void UIUtils::drawNote(Graphics& g, Rectangle<float> bounds, int mode, Colour co
     if (mode == 1)
         g.drawText("T", (int)bounds.getCentreX() + r + 2, (int)bounds.getBottom() - 12, 12, 12, Justification::centredLeft);
     if (mode == 2) {
-        g.setFont(FontOptions(16.f));
+        g.setFont(FontOptions(18.f));
         g.drawText(".", (int)bounds.getCentreX() + r + 2, (int)bounds.getBottom() - 16, 16, 16, Justification::centredLeft);
     }
 }
@@ -126,33 +126,19 @@ void UIUtils::drawGear(Graphics& g, Rectangle<int> bounds, float radius, int seg
     g.fillEllipse(x - iradius, y - iradius, iradius * 2.f, iradius * 2.f);
 }
 
-void UIUtils::drawChain(Graphics& g, Rectangle<float> bounds, Colour color, float scale)
+void UIUtils::drawChain(Graphics& g, Rectangle<float> bounds, Colour color, float)
 {
-    Path p;
+    float x = bounds.toFloat().getCentreX();
+    float y = bounds.toFloat().getCentreY();
+    float rx = 10.f;
+    float ry = 5.f;
 
-    p.startNewSubPath(0.5f, 7.37234f);
-    p.lineTo(0.5f, 4.80818f);
-    p.cubicTo(0.517043f, 3.65918f, 0.945923f, 2.56357f, 1.69414f, 1.75762f);
-    p.cubicTo(2.44236f, 0.95168f, 3.44995f, 0.5f, 4.4996f, 0.5f);
-    p.cubicTo(5.54925f, 0.5f, 6.55685f, 0.951681f, 7.30506f, 1.75762f);
-    p.cubicTo(8.05328f, 2.56357f, 8.48216f, 3.65918f, 8.4992f, 4.80817f);
-    p.lineTo(8.4992f, 7.37234f);
-
-    p.startNewSubPath(8.4992f, 12.6268f);
-    p.lineTo(8.5f, 15.1918f);
-    p.cubicTo(8.48296f, 16.3408f, 8.05408f, 17.4364f, 7.30586f, 18.2424f);
-    p.cubicTo(6.55765f, 19.0483f, 5.55005f, 19.5f, 4.5004f, 19.5f);
-    p.cubicTo(3.45075f, 19.5f, 2.44316f, 19.0483f, 1.69494f, 18.2424f);
-    p.cubicTo(0.946723f, 17.4364f, 0.517842f, 16.3408f, 0.5008f, 15.1918f);
-    p.lineTo(0.5f, 12.6268f);
-
-    p.startNewSubPath(4.4996f, 6.4966f);
-    p.lineTo(4.4996f, 13.5025f);
-
-    p.applyTransform(AffineTransform::scale(scale));
-    p.applyTransform(AffineTransform::translation(bounds.getX(), bounds.getY()));
     g.setColour(color);
-    g.strokePath(p, PathStrokeType(2.0f, PathStrokeType::curved, PathStrokeType::rounded));
+    Path p;
+    p.addRoundedRectangle(x - rx, y - ry / 2, rx, ry, 2.0f, 2.f);
+    p.addRoundedRectangle(x, y - ry / 2, rx, ry, 2.0f, 2.f);
+    p.applyTransform(AffineTransform::rotation(MathConstants<float>::pi / -4.f, x, y));
+    g.strokePath(p, PathStrokeType(1.5f));
 }
 
 void UIUtils::drawPeak(Graphics& g, Rectangle<float> bounds, Colour c, float scale)

@@ -18,7 +18,7 @@ CustomLookAndFeel::CustomLookAndFeel()
   setColour(ScrollBar::thumbColourId, Colour(COLOR_ACTIVE));
   setColour(ScrollBar::trackColourId, juce::Colours::transparentBlack);
 
-  typeface = juce::Typeface::createSystemTypefaceFor(BinaryData::UbuntuMedium_ttf, BinaryData::UbuntuMedium_ttfSize);
+  typeface = juce::Typeface::createSystemTypefaceFor(BinaryData::NunitoMedium_ttf, BinaryData::NunitoMedium_ttfSize);
   setDefaultSansSerifTypeface(typeface);
   this->setDefaultLookAndFeel(this);
 }

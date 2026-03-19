@@ -34,7 +34,7 @@ SirialAudioProcessorEditor::SirialAudioProcessorEditor (SirialAudioProcessor& p)
 
     addAndMakeVisible(settingsBtn);
     settingsBtn.setAlpha(0.f);
-    settingsBtn.setBounds(col + 100 - 5, NAV_HEIGHT / 2 - 25 / 2, 25, 25);
+    settingsBtn.setBounds(col + 100 - 12, NAV_HEIGHT / 2 - 25 / 2, 25, 25);
     settingsBtn.onClick = [this]
         {
             showSettings();
@@ -84,7 +84,7 @@ SirialAudioProcessorEditor::SirialAudioProcessorEditor (SirialAudioProcessor& p)
     addAndMakeVisible(tapsLabel);
     tapsLabel.setText("Taps", dontSendNotification);
     tapsLabel.setColour(Label::ColourIds::textColourId, Colour(COLOR_NEUTRAL));
-    tapsLabel.setFont(FontOptions(16.f));
+    tapsLabel.setFont(FontOptions(18.f));
     tapsLabel.setJustificationType(Justification::centredLeft);
     tapsLabel.setBounds(modeBtn.getBounds().withX(modeBtn.getRight() + 10).withWidth(40));
 
@@ -96,7 +96,7 @@ SirialAudioProcessorEditor::SirialAudioProcessorEditor (SirialAudioProcessor& p)
     addAndMakeVisible(timeLabel);
     timeLabel.setText("Step", dontSendNotification);
     timeLabel.setColour(Label::ColourIds::textColourId, Colour(COLOR_NEUTRAL));
-    timeLabel.setFont(FontOptions(16.f));
+    timeLabel.setFont(FontOptions(18.f));
     timeLabel.setJustificationType(Justification::centredLeft);
     timeLabel.setBounds(tapsPicker->getBounds().withX(tapsPicker->getRight() + 10).withWidth(45));
     
@@ -111,7 +111,7 @@ SirialAudioProcessorEditor::SirialAudioProcessorEditor (SirialAudioProcessor& p)
 
     addAndMakeVisible(millisBtn);
     millisBtn.setAlpha(0.f);
-    millisBtn.setBounds(tapsTimeSync->getBounds().withX(tapsTimeSync->getRight() + 10).withWidth(25));
+    millisBtn.setBounds(tapsTimeSync->getBounds().withX(tapsTimeSync->getRight() + 12).withWidth(30));
     millisBtn.onClick = [this]
         {
             auto param = audioProcessor.params.getParameter("time_mode");
@@ -120,7 +120,7 @@ SirialAudioProcessorEditor::SirialAudioProcessorEditor (SirialAudioProcessor& p)
 
     addAndMakeVisible(straightBtn);
     straightBtn.setAlpha(0.f);
-    straightBtn.setBounds(millisBtn.getBounds().withX(millisBtn.getRight() + 5));
+    straightBtn.setBounds(millisBtn.getBounds().withX(millisBtn.getRight()));
     straightBtn.onClick = [this]
         {
             auto param = audioProcessor.params.getParameter("time_mode");
@@ -129,7 +129,7 @@ SirialAudioProcessorEditor::SirialAudioProcessorEditor (SirialAudioProcessor& p)
 
     addAndMakeVisible(tripletBtn);
     tripletBtn.setAlpha(0.f);
-    tripletBtn.setBounds(straightBtn.getBounds().withX(straightBtn.getRight() + 5));
+    tripletBtn.setBounds(straightBtn.getBounds().withX(straightBtn.getRight()));
     tripletBtn.onClick = [this]
         {
             auto param = audioProcessor.params.getParameter("time_mode");
@@ -138,25 +138,28 @@ SirialAudioProcessorEditor::SirialAudioProcessorEditor (SirialAudioProcessor& p)
 
     addAndMakeVisible(dottedBtn);
     dottedBtn.setAlpha(0.f);
-    dottedBtn.setBounds(tripletBtn.getBounds().withX(tripletBtn.getRight() + 5));
+    dottedBtn.setBounds(tripletBtn.getBounds().withX(tripletBtn.getRight()));
     dottedBtn.onClick = [this]
         {
             auto param = audioProcessor.params.getParameter("time_mode");
             param->setValueNotifyingHost(param->convertTo0to1(3.f));
         };
-    
+
+
+    // DELAY VIEW
+
+    delayView = std::make_unique<DelayView>(*this);
+    addAndMakeVisible(delayView.get());
+    delayView->setBounds(col, row + 35, KNOB_WIDTH * 7, 185);
+
     addAndMakeVisible(linkBtn);
-    linkBtn.setBounds(dottedBtn.getBounds().withX(dottedBtn.getRight() + 10).withWidth(55));
+    linkBtn.setBounds(dottedBtn.getBounds().withWidth(25).withRightX(delayView->getRight()));
     linkBtn.setAlpha(0.f);
     linkBtn.onClick = [this]
         {
             auto param = audioProcessor.params.getParameter("link");
             param->setValueNotifyingHost(param->getValue() > 0.f ? 0.f : 1.f);
         };
-
-    delayView = std::make_unique<DelayView>(*this);
-    addAndMakeVisible(delayView.get());
-    delayView->setBounds(col, row + 35, KNOB_WIDTH * 7, 185);
 
     // BELOW DELAY VIEW
     col = PLUG_PADDING;
@@ -195,7 +198,7 @@ SirialAudioProcessorEditor::SirialAudioProcessorEditor (SirialAudioProcessor& p)
     outGain.onValueChange = [this] { refreshOutGainLabel(); };
 
     addAndMakeVisible(outGainLabel);
-    outGainLabel.setFont(FontOptions(16.f));
+    outGainLabel.setFont(FontOptions(18.f));
     outGainLabel.setText("Out", dontSendNotification);
     outGainLabel.setJustificationType(Justification::centredRight);
     outGainLabel.setColour(Label::ColourIds::textColourId, Colours::white);
@@ -283,17 +286,30 @@ void SirialAudioProcessorEditor::paint (Graphics& g)
     //g.fillRoundedRectangle(presetBtn.getBounds().toFloat().reduced(0.5f), BEVEL_CORNER);
     UIUtils::drawBevel(g, presetBtn.getBounds().toFloat().reduced(0.5f), BEVEL_CORNER, Colour(COLOR_BEVEL));
     g.setColour(Colours::white);
-    g.setFont(FontOptions(16.f));
+    g.setFont(FontOptions(18.f));
     g.drawText(audioProcessor.presetName, presetBtn.getBounds().toFloat(), Justification::centred);
     UIUtils::drawTriangle(g, nextPresetBtn.getBounds().toFloat().reduced(8.f), 1, Colours::white);
     UIUtils::drawTriangle(g, prevPresetBtn.getBounds().toFloat().reduced(8.f), 3, Colours::white);
     UIUtils::drawSave(g, saveBtn.getBounds().toFloat().translated(3.5, 3.5), Colours::white);
 
-    g.setFont(FontOptions(26.f));
-    g.setColour(Colours::white);
-    g.drawText("Sirial", logo.getBounds().expanded(0, 10), Justification::centredLeft);
-    UIUtils::drawGear(g, settingsBtn.getBounds(), 9, 6, Colours::white, Colour(0xff3A2727));
-    g.setFont(FontOptions(16.f));
+    juce::Font f(FontOptions(28.f));
+    g.setFont(FontOptions(28.f));
+    auto color = Colours::white;
+    g.setColour(color);
+
+    String text = "SIRIAL";
+    float x = (float)logo.getX();
+    float y = (float)logo.getY();
+    for (auto c : text)
+    {
+        juce::String s = juce::String::charToString(c);
+        g.drawText(s, Rectangle<float>(x, y, (float)100, (float)NAV_HEIGHT), juce::Justification::left);
+
+        x += f.getStringWidthFloat(s) + 4.f;
+    }
+    //g.drawText("SIRIAL", logo.getBounds().expanded(0, 10), Justification::centredLeft);
+    UIUtils::drawGear(g, settingsBtn.getBounds(), 9, 6, color, Colour(0xff242D3A));
+    g.setFont(FontOptions(18.f));
 
     // 
     auto mode = (int)audioProcessor.params.getRawParameterValue("mode")->load();
@@ -309,42 +325,72 @@ void SirialAudioProcessorEditor::paint (Graphics& g)
     auto link = audioProcessor.params.getRawParameterValue("link")->load();
     if (linkBtn.isVisible())
     {
-        g.setColour(Colour(COLOR_ACTIVE));
+        UIUtils::drawBevelLight(g, linkBtn.getBounds().toFloat().expanded(1.f), 3.f);
         if (link)
         {
-            g.fillRoundedRectangle(linkBtn.getBounds().toFloat().translated(0.5f,0.5f), 3.f);
-            g.setColour(Colour(COLOR_BACKGROUND));
+            g.setColour(Colour(COLOR_ACTIVE).darker(0.5f).withAlpha(0.5f));
+            g.fillRoundedRectangle(linkBtn.getBounds().toFloat().reduced(0.5f), 3.f);
+            g.setColour(Colour(COLOR_ACTIVE));
+            g.drawRoundedRectangle(linkBtn.getBounds().toFloat().reduced(0.5f), 3.f, 1.f);
         }
-        UIUtils::drawChain(g, linkBtn.getBounds().toFloat().withWidth(25.f).translated(8.f, 3.f), link ? Colour(COLOR_BACKGROUND) : Colour(COLOR_ACTIVE));
-        g.drawText("Link", linkBtn.getBounds().translated(8,0), Justification::centred);
+
+        UIUtils::drawChain(g, linkBtn.getBounds().toFloat(), link ? Colour(0xffffffff) : Colour(COLOR_NEUTRAL));
+
+        g.setColour(Colour(COLOR_NEUTRAL));
+        g.drawText("Link", linkBtn.getBounds().translated(-40,0).withWidth(35), Justification::centred);
     }
 
     auto timeMode = (int)audioProcessor.params.getRawParameterValue("time_mode")->load();
-    UIUtils::drawBevelLight(g, millisBtn.getBounds().toFloat().withRight((float)dottedBtn.getRight()).expanded(3,0), BEVEL_CORNER);
+    UIUtils::drawBevelLight(g, millisBtn.getBounds().toFloat().withRight((float)dottedBtn.getRight()).expanded(1.f,1.f), 5.f);
+
+    g.setColour(Colour(COLOR_BEVEL).withAlpha(.5f));
+    g.drawVerticalLine((int)millisBtn.getRight(), (float)millisBtn.getY(), (float)millisBtn.getBottom());
+    g.drawVerticalLine((int)straightBtn.getRight(), (float)millisBtn.getY(), (float)millisBtn.getBottom());
+    g.drawVerticalLine((int)tripletBtn.getRight(), (float)millisBtn.getY(), (float)millisBtn.getBottom());
     if (timeMode == 0)
     {
+        Path p;
+        auto r = millisBtn.getBounds().toFloat().translated(0.5f, 0.5f);
+        p.addRoundedRectangle(r.getX(), r.getY(), r.getWidth(), r.getHeight(), 5.f, 5.f, true, false, true, false);
+        g.setColour(Colour(COLOR_ACTIVE).darker(0.5f).withAlpha(0.5f));
+        g.fillPath(p);
         g.setColour(Colour(COLOR_ACTIVE));
-        g.drawRoundedRectangle(millisBtn.getBounds().toFloat().translated(0.5f, 0.5f), 3.f, 1.f);
+        g.strokePath(p, PathStrokeType(1.f));
     }
-    UIUtils::drawClock(g, millisBtn.getBounds().toFloat().reduced(5.f), timeMode == 0 ? Colour(0xffffffff) : Colour(COLOR_NEUTRAL));
+    UIUtils::drawClock(g, millisBtn.getBounds().toFloat().reduced(7.f, 5.f), timeMode == 0 ? Colour(0xffffffff) : Colour(COLOR_NEUTRAL));
     if (timeMode == 1)
     {
+        g.setColour(Colour(COLOR_ACTIVE).darker(0.5f).withAlpha(0.5f));
+        g.fillRoundedRectangle(straightBtn.getBounds().toFloat().translated(0.5f, 0.5f), 0.f);
         g.setColour(Colour(COLOR_ACTIVE));
-        g.drawRoundedRectangle(straightBtn.getBounds().toFloat().translated(0.5f, 0.5f), 3.f, 1.f);
+        g.drawRoundedRectangle(straightBtn.getBounds().toFloat().translated(0.5f, 0.5f), 0.f, 1.f);
+
     }
     UIUtils::drawNote(g, straightBtn.getBounds().toFloat(), 0, timeMode == 1 ? Colour(0xffffffff) : Colour(COLOR_NEUTRAL));
     if (timeMode == 2)
     {
+        g.setColour(Colour(COLOR_ACTIVE).darker(0.5f).withAlpha(0.5f));
+        g.fillRoundedRectangle(tripletBtn.getBounds().toFloat().translated(0.5f, 0.5f), 0.f);
         g.setColour(Colour(COLOR_ACTIVE));
-        g.drawRoundedRectangle(tripletBtn.getBounds().toFloat().translated(0.5f, 0.5f), 3.f, 1.f);
+        g.drawRoundedRectangle(tripletBtn.getBounds().toFloat().translated(0.5f, 0.5f), 0.f, 1.f);
     }
-    UIUtils::drawNote(g, tripletBtn.getBounds().toFloat(), 1, timeMode == 2 ? Colour(0xffffffff) : Colour(COLOR_NEUTRAL));
+    UIUtils::drawNote(g, tripletBtn.getBounds().toFloat().translated(-2.f, 0), 1, timeMode == 2 ? Colour(0xffffffff) : Colour(COLOR_NEUTRAL));
     if (timeMode == 3)
     {
+        Path p;
+        auto r = dottedBtn.getBounds().toFloat().translated(0.5f, 0.5f);
+        p.addRoundedRectangle(r.getX(), r.getY(), r.getWidth(), r.getHeight(), 5.f, 5.f, false, true, false, true);
+        g.setColour(Colour(COLOR_ACTIVE).darker(0.5f).withAlpha(0.5f));
+        g.fillPath(p);
         g.setColour(Colour(COLOR_ACTIVE));
-        g.drawRoundedRectangle(dottedBtn.getBounds().toFloat().translated(0.5f, 0.5f), 3.f, 1.f);
+        g.strokePath(p, PathStrokeType(1.f));
     }
     UIUtils::drawNote(g, dottedBtn.getBounds().toFloat(), 2, timeMode == 3 ? Colour(0xffffffff) : Colour(COLOR_NEUTRAL));
+
+    g.setColour(Colour(COLOR_NEUTRAL));
+    g.drawText("DAMP", Rectangle<int>(KNOB_WIDTH, 25).withX(lowcut->getX()).withY(lowcut->getY() - 25), Justification::centred);
+    g.drawText("SAT", Rectangle<int>(KNOB_WIDTH, 25).withX(lowcut->getX() + KNOB_WIDTH).withY(lowcut->getY() - 25), Justification::centred);
+    g.drawText("DIFF", Rectangle<int>(KNOB_WIDTH, 25).withX(lowcut->getX() + KNOB_WIDTH * 2).withY(lowcut->getY() - 25), Justification::centred);
 }
 
 void SirialAudioProcessorEditor::resized()

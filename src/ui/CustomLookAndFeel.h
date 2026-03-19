@@ -29,6 +29,11 @@ public:
         return box.getComponentID() == "small" ? FontOptions(12.0f) : FontOptions(16.0f);
     }
 
+    juce::Font getPopupMenuFont() override
+    {
+        return juce::Font(FontOptions(19.0f));
+    }
+
     void drawTreeviewPlusMinusBox(Graphics& g, const Rectangle<float>& area,
         juce::Colour backgroundColour, bool isOpen, bool isMouseOver) override;
 

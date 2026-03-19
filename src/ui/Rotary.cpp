@@ -317,6 +317,6 @@ void Rotary::draw_label_value(juce::Graphics& g, float slider_val)
     }
 
     g.setColour(Colours::white);
-    g.setFont(16.0f);
+    g.setFont(18.0f);
     g.drawText(text, 0, getHeight() - 16, getWidth(), 16, juce::Justification::centred, true);
 }

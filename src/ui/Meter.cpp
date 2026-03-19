@@ -41,7 +41,7 @@ void drawMarkers(Graphics& g, Rectangle<float>barbounds, Colour c, float db6, fl
 
 
 	g.setFont(FontOptions(12.f));
-	auto r = Rectangle<float>(barbounds.getX(), 0, barbounds.getWidth() * 2, 16.f);
+	auto r = Rectangle<float>(barbounds.getX(), 0, barbounds.getWidth() * 2, 18.f);
 	r = r.withBottomY(barbounds.getBottom() - db6 * barbounds.getHeight());
 	g.drawText("-6", r, Justification::centred);
 	r = r.withBottomY(barbounds.getBottom() - db18 * barbounds.getHeight());
