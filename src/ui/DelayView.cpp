@@ -5,6 +5,9 @@ DelayView::DelayView(SirialAudioProcessorEditor& p)
 	: editor(p)
 {
 	editor.audioProcessor.params.addParameterListener("mode", this);
+	editor.audioProcessor.params.addParameterListener("mix", this);
+	editor.audioProcessor.params.addParameterListener("pan_wet", this);
+	editor.audioProcessor.params.addParameterListener("pan_dry", this);
 	editor.audioProcessor.params.addParameterListener("ntaps", this);
 	editor.audioProcessor.params.addParameterListener("time_mode", this);
 	editor.audioProcessor.params.addParameterListener("time_sync", this);
@@ -18,12 +21,46 @@ DelayView::DelayView(SirialAudioProcessorEditor& p)
 		editor.audioProcessor.params.addParameterListener(prefix + "time_l", this);
 		editor.audioProcessor.params.addParameterListener(prefix + "time_r", this);
 		editor.audioProcessor.params.addParameterListener(prefix + "feedback", this);
+		editor.audioProcessor.params.addParameterListener(prefix + "feedback_global", this);
 	}
+
+	ampPicker = std::make_unique<ValuePicker>(p, "tap0_amp_l");
+	ampPicker->prefix = "Amp:";
+	ampPicker->suffix = "%";
+	ampPicker->isPercentage = true;
+	ampPicker->precision = 0;
+	ampPicker->fontSize = 16.f;
+	ampPicker->color = Colour(COLOR_NEUTRAL);
+	addAndMakeVisible(ampPicker.get());
+
+	feedbkPicker = std::make_unique<ValuePicker>(p, "tap0_feedback");
+	feedbkPicker->prefix = "Feed:";
+	feedbkPicker->suffix = "%";
+	feedbkPicker->isPercentage = true;
+	feedbkPicker->precision = 0;
+	feedbkPicker->fontSize = 16.f;
+	feedbkPicker->color = Colour(COLOR_NEUTRAL);
+	addAndMakeVisible(feedbkPicker.get());
+
+	addAndMakeVisible(globalFeedbk);
+	globalFeedbk.setTooltip("Use global feedback or an amount for this tap");
+	globalFeedbk.setAlpha(0.f);
+	globalFeedbk.onClick = [this]
+		{
+			int idx = selectedTap >= 1337 ? selectedTap - 1337 : selectedTap;
+			auto param = editor.audioProcessor.params.getParameter("tap" + String(idx) + "_feedback_global");
+			param->setValueNotifyingHost(param->getValue() > 0.f ? 0.f : 1.f);
+		};
+
+	updateInfo();
 }
 
 DelayView::~DelayView()
 {
 	editor.audioProcessor.params.removeParameterListener("mode", this);
+	editor.audioProcessor.params.removeParameterListener("mix", this);
+	editor.audioProcessor.params.removeParameterListener("pan_wet", this);
+	editor.audioProcessor.params.removeParameterListener("pan_dry", this);
 	editor.audioProcessor.params.removeParameterListener("ntaps", this);
 	editor.audioProcessor.params.removeParameterListener("time_mode", this);
 	editor.audioProcessor.params.removeParameterListener("time_sync", this);
@@ -37,6 +74,7 @@ DelayView::~DelayView()
 		editor.audioProcessor.params.removeParameterListener(prefix + "time_l", this);
 		editor.audioProcessor.params.removeParameterListener(prefix + "time_r", this);
 		editor.audioProcessor.params.removeParameterListener(prefix + "feedback", this);
+		editor.audioProcessor.params.removeParameterListener(prefix + "feedback_global", this);
 	}
 }
 
@@ -47,7 +85,18 @@ void DelayView::parameterChanged(const juce::String& parameterID, float)
 		selectedTap = 0;
 		mouseOverBase = -1;
 	}
-	juce::MessageManager::callAsync([this] { repaint(); });
+
+	juce::MessageManager::callAsync([this] 
+		{ 
+			updateInfo();
+			repaint(); 
+		});
+}
+
+void DelayView::mouseExit(const MouseEvent& e)
+{
+	mouseOverBase = -1;
+	repaint();
 }
 
 void DelayView::mouseMove(const MouseEvent& e)
@@ -88,12 +137,25 @@ void DelayView::mouseDown(const MouseEvent& e)
 		return;
 
 	selectedTap = mouseOverBase;
+	updateInfo();
 	int idx = selectedTap >= 1337 ? selectedTap - 1337 : selectedTap;
 	taps[idx].snapacc = 0.f;
 
 	last_mouse_position = e.getPosition();
 	setMouseCursor(MouseCursor::NoCursor);
 	e.source.enableUnboundedMouseMovement(true);
+	repaint();
+}
+
+void DelayView::updateInfo()
+{
+	auto idx = selectedTap >= 1337 ? selectedTap - 1337 : selectedTap;
+	auto isLeft = selectedTap < 1337;
+
+	bool useGlobalFeedbk = (bool)editor.audioProcessor.params.getRawParameterValue("tap" + String(idx) + "_feedback_global")->load();
+
+	ampPicker->setParam("tap" + String(idx) + "_amp_" + String(isLeft ? "l" : "r"));
+	feedbkPicker->setParam(useGlobalFeedbk ? "feedback" : "tap" + String(idx) + "_feedback");
 }
 
 void DelayView::mouseUp(const MouseEvent& e)
@@ -279,10 +341,20 @@ void DelayView::updateAmplitudes(const MouseEvent& e)
 	}
 }
 
-void DelayView::paint(Graphics& g)
+void DelayView::resized()
 {
 	auto b = getLocalBounds().toFloat();
 	viewb = b.reduced(20.f);
+	infob = viewb.withHeight(20.f).withY(viewb.getBottom());
+
+	ampPicker->setBounds(infob.withTrimmedLeft(75.f).withWidth(110.f).toNearestInt());
+	feedbkPicker->setBounds(infob.withTrimmedLeft(75.f + 110.f).withWidth(110.f).toNearestInt());
+	globalFeedbk.setBounds(infob.withTrimmedLeft(75.f + 220.f - 30.f).withWidth(50.f).toNearestInt());
+}
+
+void DelayView::paint(Graphics& g)
+{
+	auto b = getLocalBounds().toFloat();
 	UIUtils::drawBevel(g, b.translated(0.5f, 0.5f).reduced(1.f), 6.f, Colour(COLOR_BEVEL));
 
 	mode = (Delay::DelayMode)editor.audioProcessor.params.getRawParameterValue("mode")->load();
@@ -291,6 +363,12 @@ void DelayView::paint(Graphics& g)
 	timeMode = (Delay::TimeMode)editor.audioProcessor.params.getRawParameterValue("time_mode")->load();
 	timeSync = (Delay::TimeSync)editor.audioProcessor.params.getRawParameterValue("time_sync")->load();
 	timeMillis = (int)editor.audioProcessor.params.getRawParameterValue("time_millis")->load();
+
+	if (mode == Delay::Mono && selectedTap >= 1337)
+	{
+		selectedTap -= 1337;
+		updateInfo();
+	}
 
 	for (int t = 0; t < MAX_TAPS; ++t)
 	{
@@ -325,8 +403,12 @@ void DelayView::paint(Graphics& g)
 	g.drawHorizontalLine((int)viewb.getY(), viewb.getX(), viewb.getRight());
 	g.drawHorizontalLine((int)viewb.getBottom(), viewb.getX(), viewb.getRight());
 
+	g.saveState();
+	g.reduceClipRegion(viewb.expanded(5.f, 20.f).toNearestInt());
 	drawGrid(g);
 	drawTaps(g);
+	drawInfo(g);
+	g.restoreState();
 }
 
 void DelayView::drawGrid(Graphics& g)
@@ -420,27 +502,60 @@ void DelayView::drawTaps(Graphics& g)
 			g.fillPath(p);
 		};
 
-	auto drawWickMono = [&](Rectangle<float> base, Tap& tap)
+	auto drawWickMono = [&](Rectangle<float> base, Tap& tap, float mix, Colour c)
 		{
+			g.setColour(c.withAlpha(0.5f));
 			float h = (viewb.getHeight() - TAP_BASE_H) * tap.ampL;
 			g.fillRect(base.getCentreX() - TAP_LINE_W / 2.f, base.getY() - h, TAP_LINE_W, h + 2);
+			g.setColour(c.withAlpha(1.f));
+			g.fillRect(base.getCentreX() - TAP_LINE_W / 2.f, base.getY() - h * mix, TAP_LINE_W, h * mix + 2);
 		};
 
-	auto drawWickLeft = [&](Rectangle<float> base, Tap& tap)
+	auto drawWickLeft = [&](Rectangle<float> base, Tap& tap, float mix, Colour c)
 		{
+			g.setColour(c.withAlpha(0.5f));
 			float h = (viewb.getHeight() / 2.f - TAP_BASE_H) * tap.ampL;
 			g.fillRect(base.getCentreX() - TAP_LINE_W / 2.f, base.getY() - h, TAP_LINE_W, h + 2);
+			g.setColour(c);
+			g.fillRect(base.getCentreX() - TAP_LINE_W / 2.f, base.getY() - h * mix, TAP_LINE_W, h * mix + 2);
 		};
 
-	auto drawWickRight = [&](Rectangle<float> base, Tap& tap)
+	auto drawWickRight = [&](Rectangle<float> base, Tap& tap, float mix, Colour c)
 		{
+			g.setColour(c.withAlpha(0.5f));
 			float h = (viewb.getHeight() / 2.f - TAP_BASE_H) * tap.ampR;
 			g.fillRect(base.getCentreX() - TAP_LINE_W / 2.f, base.getBottom() - 2, TAP_LINE_W, h + 2);
+			g.setColour(c);
+			g.fillRect(base.getCentreX() - TAP_LINE_W / 2.f, base.getBottom() - 2, TAP_LINE_W, h * mix + 2);
 		};
 
+	auto mix = editor.audioProcessor.params.getRawParameterValue("mix")->load();
+	auto drymix = mix <= 0.5f ? 1.f : 1.f - (mix - 0.5f) * 2.f;
+	auto wetmix = mix <= 0.5f ? mix * 2.f : 1.f;
+	auto panWet = editor.audioProcessor.params.getRawParameterValue("pan_wet")->load();
+	auto panDry = editor.audioProcessor.params.getRawParameterValue("pan_dry")->load();
+
 	// draw dry input tap
-	g.setColour(Colours::white.darker(0.5f));
-	g.fillRect(viewb.getX() - TAP_LINE_W, viewb.getY(), TAP_LINE_W, viewb.getHeight());
+	if (mode == Delay::Mono)
+	{
+		g.setColour(Colours::white.darker(0.5f).withAlpha(0.5f));
+		g.fillRect(viewb.getX() - TAP_LINE_W, viewb.getY(), TAP_LINE_W, viewb.getHeight());
+		float h = drymix * viewb.getHeight();
+		g.setColour(Colours::white.darker(0.5f));
+		g.fillRect(viewb.getX() - TAP_LINE_W, viewb.getBottom() - h, TAP_LINE_W, h);
+	}
+	else
+	{
+		auto panLeft = panDry <= 0.5f ? 1.f : 1.f - (panDry - 0.5f) * 2.f;
+		auto panRight = panDry <= 0.5 ? panDry * 2.f : 1.f;
+		g.setColour(Colours::white.darker(0.5f).withAlpha(0.5f));
+		g.fillRect(viewb.getX() - TAP_LINE_W, viewb.getY(), TAP_LINE_W, viewb.getHeight());
+		float h = viewb.getHeight() / 2 * drymix * panLeft;
+		g.setColour(Colours::white.darker(0.5f));
+		g.fillRect(viewb.getX() - TAP_LINE_W, viewb.getCentreY() - h, TAP_LINE_W, h);
+		h = viewb.getHeight() / 2 * drymix * panRight;
+		g.fillRect(viewb.getX() - TAP_LINE_W, viewb.getCentreY(), TAP_LINE_W, h);
+	}
 
 	if (mode == Delay::Mono)
 	{
@@ -449,23 +564,55 @@ void DelayView::drawTaps(Graphics& g)
 			g.setColour(Colour(COLOR_TAP));
 			if (mouseOverBase == t) g.setColour(Colour(COLOR_TAP_HOVER));
 			drawBase(bases_mono[t]);
-			drawWickMono(bases_mono[t], taps[t]);
+			drawWickMono(bases_mono[t], taps[t], wetmix, Colour(COLOR_TAP));
 		}
 	}
 	else
 	{
+		auto panLeft = panWet <= 0.5f ? 1.f : 1.f - (panWet - 0.5f) * 2.f;
+		auto panRight = panWet <= 0.5 ? panWet * 2.f : 1.f;
 		for (int t = ntaps - 1; t >= 0; --t)
 		{
-			g.setColour(Colour(mode == Delay::PingPong && t % 2 == 1 ? COLOR_TAP2 : COLOR_TAP));
-			if (mouseOverBase == t || link && mouseOverBase == t + 1337) 
-				g.setColour(Colour(COLOR_TAP_HOVER));
+			Colour c = mouseOverBase == t || link && mouseOverBase == t + 1337 
+				? Colour(COLOR_TAP_HOVER) 
+				: (Colour(mode == Delay::PingPong && t % 2 == 1 ? COLOR_TAP2 : COLOR_TAP));
+			g.setColour(c);
 			drawBase(bases_left[t].expanded(0, 0.5f));
-			drawWickLeft(bases_left[t], taps[t]);
-			g.setColour(Colour(mode == Delay::PingPong && t % 2 == 1 ? COLOR_TAP : COLOR_TAP2));
-			if (mouseOverBase == t + 1337 || link && mouseOverBase == t) 
-				g.setColour(Colour(COLOR_TAP_HOVER));
+			drawWickLeft(bases_left[t], taps[t], wetmix * panLeft, c);
+			c = mouseOverBase == t + 1337 || link && mouseOverBase == t 
+				? Colour(COLOR_TAP_HOVER)
+				: Colour(mode == Delay::PingPong && t % 2 == 1 ? COLOR_TAP : COLOR_TAP2);
+			g.setColour(c);
 			drawBaseInverted(bases_right[t]);
-			drawWickRight(bases_right[t], taps[t]);
+			drawWickRight(bases_right[t], taps[t], wetmix * panRight, c);
 		}
+	}
+}
+
+void DelayView::drawInfo(Graphics& g)
+{
+	auto idx = selectedTap >= 1337 ? selectedTap - 1337 : selectedTap;
+	auto isLeft = selectedTap < 1337;
+
+	g.setColour(Colour(COLOR_NEUTRAL));
+	g.setFont(FontOptions(16.f));
+	auto txt = "Tap " + String(idx + 1);
+	if (mode != Delay::Mono)
+		txt += isLeft ? "L" : "R";
+	g.drawText(txt, infob.withWidth(80), Justification::centredLeft);
+
+	bool useGlobalFeedbk = (bool)editor.audioProcessor.params.getRawParameterValue("tap" + String(idx) + "_feedback_global")->load();
+	
+	if (useGlobalFeedbk)
+	{
+		g.setColour(Colour(COLOR_NEUTRAL));
+		g.fillRect(globalFeedbk.getBounds().reduced(0, 4));
+		g.setColour(Colour(COLOR_BEVEL));
+		g.drawText("Global", globalFeedbk.getBounds(), Justification::centred);
+	}
+	else
+	{
+		g.setColour(Colour(COLOR_NEUTRAL));
+		g.drawText("Local", globalFeedbk.getBounds(), Justification::centred);
 	}
 }

@@ -41,6 +41,7 @@ void Delay::prepare(float _srate)
 
 void Delay::onSlider()
 {
+    bool isMono = audioProcessor.params.getRawParameterValue("mode")->load() == 0.f;
     ntaps = (int)audioProcessor.params.getRawParameterValue("ntaps")->load();
     bool rev = (bool)audioProcessor.params.getRawParameterValue("reverse")->load();
     if (rev != reverse) clear();
@@ -54,9 +55,13 @@ void Delay::onSlider()
         String prefix = "tap" + String(t) + "_";
         auto& tap = taps[t];
         tap.ampL = audioProcessor.params.getRawParameterValue(prefix + "amp_l")->load();
-        tap.ampR = audioProcessor.params.getRawParameterValue(prefix + "amp_r")->load();
+        tap.ampR = isMono 
+            ? tap.ampL 
+            : audioProcessor.params.getRawParameterValue(prefix + "amp_r")->load();
         tap.timePercL = audioProcessor.params.getRawParameterValue(prefix + "time_l")->load();
-        tap.timePercR = audioProcessor.params.getRawParameterValue(prefix + "time_r")->load();
+        tap.timePercR = isMono 
+            ? tap.timePercL
+            : audioProcessor.params.getRawParameterValue(prefix + "time_r")->load();
         bool useGlobalFeedback = audioProcessor.params.getRawParameterValue(prefix + "feedback_global")->load();
         tap.setFeedback(
             useGlobalFeedback ? globalFeedback :
@@ -161,7 +166,7 @@ void Delay::processBlock(float* left, float* right, int nsamps)
             float l = tap.left.read3(ltime);
             float r = tap.right.read3(rtime);
             l = tap.leftHP.processHP(tap.leftLP.processLP(l));
-            r = tap.rightHP.processHP(tap.rightLP.processLP(l));
+            r = tap.rightHP.processHP(tap.rightLP.processLP(r));
             lfeed[t] = l;
             rfeed[t] = r;
         }

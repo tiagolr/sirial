@@ -17,6 +17,14 @@ void ValuePicker::parameterChanged(const juce::String&, float)
 	MessageManager::callAsync([this]{ repaint(); });
 }
 
+void ValuePicker::setParam(String id)
+{
+    editor.audioProcessor.params.removeParameterListener(paramId, this);
+    paramId = id;
+    editor.audioProcessor.params.addParameterListener(paramId, this);
+    repaint();
+}
+
 void ValuePicker::mouseDown(const MouseEvent& e)
 {
 	e.source.enableUnboundedMouseMovement(true);
@@ -90,6 +98,9 @@ void ValuePicker::paint(Graphics& g)
 	auto param = editor.audioProcessor.params.getParameter(paramId);
     auto normValue = param->getValue();
     auto value = param->convertFrom0to1(normValue);
+
+    if (isPercentage)
+        value = std::round(value * 100);
 
 	g.setFont(FontOptions(fontSize));
     g.setColour(color);

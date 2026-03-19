@@ -4,6 +4,7 @@
 #include "../Globals.h"
 #include "UIUtils.h"
 #include "../dsp/Delay.h"
+#include "ValuePicker.h"
 
 using namespace globals;
 class SirialAudioProcessorEditor;
@@ -29,17 +30,26 @@ public:
 
     void mouseMove(const MouseEvent& e) override;
     void mouseDown(const MouseEvent& e) override;
+    void mouseExit(const MouseEvent& e) override;
     void mouseUp(const MouseEvent& e) override;
     void mouseDrag(const MouseEvent& e) override;
 
     void updateAmplitudes(const MouseEvent& e);
 
+    void resized() override;
     void paint(Graphics& g) override;
     void drawGrid(Graphics& g);
     void drawTaps(Graphics& g);
+    void drawInfo(Graphics& g);
+
+    void updateInfo();
 
 private:
     SirialAudioProcessorEditor& editor;
+
+    std::unique_ptr<ValuePicker> ampPicker;
+    std::unique_ptr<ValuePicker> feedbkPicker;
+    TextButton globalFeedbk;
 
     Point<int> last_mouse_position{};
     int mouseOverBase = -1;
@@ -58,4 +68,5 @@ private:
     Tap dummyTap{};
 
     Rectangle<float> viewb{};
+    Rectangle<float> infob{};
 };

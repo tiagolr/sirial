@@ -16,12 +16,15 @@ public:
 	String suffix = "";
 	String prefix = "";
 	int precision = 2;
+    bool isPercentage = false;
     Colour color = Colours::white;
     Justification::Flags align = Justification::centred;
 
     ValuePicker(SirialAudioProcessorEditor& p, String paramId);
     ~ValuePicker() override;
     void parameterChanged(const juce::String& parameterID, float newValue);
+
+    void setParam(String id);
 
     void mouseDown(const MouseEvent& e) override;
     void mouseUp(const MouseEvent& e) override;

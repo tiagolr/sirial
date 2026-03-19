@@ -34,22 +34,38 @@ public:
         return juce::Font(FontOptions(19.0f));
     }
 
-    void drawTooltip(juce::Graphics& g, const juce::String& text, int width, int height) override
+    Rectangle<int> getTooltipBounds(const String& tipText,
+        Point<int> screenPos,
+        Rectangle<int> parentArea) override
     {
-        const int padding = 10;
-        juce::Rectangle<float> area(0, 0, (float)width, (float)height);
+        Font font(FontOptions(18.0f));
+        AttributedString attributedText;
+        attributedText.append(tipText, font);
 
-        g.setColour(findColour(juce::TooltipWindow::backgroundColourId));
-        g.fillRoundedRectangle(area, 4.0f);
+        TextLayout layout;
+        layout.createLayout(attributedText, 1000.0f);
 
-        juce::AttributedString s;
-        s.setJustification(juce::Justification::centredLeft);
-        s.append(text, juce::Font(FontOptions(16.f)),
-            findColour(juce::TooltipWindow::textColourId));
+        int width = (int)layout.getWidth() + 20;
+        int height = (int)layout.getHeight() + 10;
 
-        juce::TextLayout tl;
-        tl.createLayout(s, (float)width - 2 * padding);
-        tl.draw(g, area.reduced((float)padding));
+        int x = screenPos.x;
+        int y = screenPos.y - height / 2;
+
+        Rectangle<int> bounds(x, y, width, height);
+        bounds = bounds.constrainedWithin(parentArea);
+
+        return bounds;
+    }
+
+    void drawTooltip(Graphics& g,
+        const String& text,
+        int width, int height) override
+    {
+        g.setColour(Colours::black);
+        g.fillRoundedRectangle(0, 0, (float)width, (float)height, 6.0f);
+        g.setColour(Colours::white);
+        g.setFont(Font(FontOptions(18.0f)));
+        g.drawFittedText(text, 0, 0, width, height, Justification::centred, 1);
     }
 
     void drawTreeviewPlusMinusBox(Graphics& g, const Rectangle<float>& area,
