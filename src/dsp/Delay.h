@@ -14,6 +14,7 @@ public:
 		Mono,
 		Stereo,
 		PingPong,
+		StereoMono
 	};
 
 	enum TimeMode

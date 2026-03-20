@@ -69,6 +69,8 @@ private:
 
     std::unique_ptr<DelayView> delayView;
     std::unique_ptr<Rotary> mix;
+    std::unique_ptr<Rotary> dry;
+    std::unique_ptr<Rotary> wet;
     std::unique_ptr<Rotary> feedback;
     TextButton panDrySumBtn;
     TextButton panWetSumBtn;

@@ -35,7 +35,7 @@ AudioProcessorValueTreeState::ParameterLayout SirialAudioProcessor::createParame
 {
     AudioProcessorValueTreeState::ParameterLayout layout;
 
-    layout.add(std::make_unique<MetaParameterChoice>("mode", "Mode", StringArray{ "Mono", "Stereo", "Ping-Pong" }, 0));
+    layout.add(std::make_unique<MetaParameterChoice>("mode", "Mode", StringArray{ "Mono", "Stereo", "Ping-Pong", "Stereo MonoIn"}, 0));
     layout.add(std::make_unique<AudioParameterInt>("ntaps", "Num Taps", 1, 16, 4));
     layout.add(std::make_unique<AudioParameterBool>("reverse", "Reverse", false));
     layout.add(std::make_unique<AudioParameterBool>("link", "Link", false));

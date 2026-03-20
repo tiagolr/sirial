@@ -185,12 +185,20 @@ void Delay::processBlock(float* left, float* right, int nsamps)
                 tap.left.write(rfeed[ntaps-1] * tap.feedbackL, inputOffsetL >= 0);
                 tap.right.write(lfeed[ntaps-1] * tap.feedbackR, inputOffsetR >= 0);
             }
+            else if (mode == StereoMono)
+            {
+                float monoIn = (left[i] + right[i]) * ISQRT2;
+                tap.left.writeOffset(monoIn, inputOffsetL, inputOffsetL < 0);
+                tap.right.writeOffset(monoIn, inputOffsetR, inputOffsetR < 0);
+                tap.left.write(lfeed[ntaps - 1] * tap.feedbackL, inputOffsetL >= 0);
+                tap.right.write(rfeed[ntaps - 1] * tap.feedbackR, inputOffsetR >= 0);
+            }
             else
             {
                 tap.left.writeOffset(left[i], inputOffsetL, inputOffsetL < 0);
                 tap.right.writeOffset(right[i], inputOffsetR, inputOffsetR < 0);
-                tap.left.write(lfeed[ntaps-1] * tap.feedbackL, inputOffsetL >= 0);
-                tap.right.write(rfeed[ntaps-1] * tap.feedbackR, inputOffsetR >= 0);
+                tap.left.write(lfeed[ntaps - 1] * tap.feedbackL, inputOffsetL >= 0);
+                tap.right.write(rfeed[ntaps - 1] * tap.feedbackR, inputOffsetR >= 0);
             }
         }
 

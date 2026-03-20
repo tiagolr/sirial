@@ -400,7 +400,7 @@ void SirialAudioProcessorEditor::paint (Graphics& g)
     // 
     auto mode = (int)audioProcessor.params.getRawParameterValue("mode")->load();
     UIUtils::drawBevel(g, modeBtn.getBounds().toFloat().translated(0.5f, 0.5f), BEVEL_CORNER, Colour(COLOR_BEVEL));
-    String modeText = mode == 0 ? "Mono" : mode == 1 ? "Stereo" : "Pipo";
+    String modeText = mode == 0 ? "Mono" : mode == 1 ? "Stereo" : mode == 2 ? "Pipo" : "MStereo";
     g.setColour(Colours::white);
     g.drawText(modeText, modeBtn.getBounds(), Justification::centred);
 
@@ -563,6 +563,7 @@ void SirialAudioProcessorEditor::showModeMenu()
     PopupMenu menu;
     menu.addItem(1, "Mono", true, mode == 0);
     menu.addItem(2, "Stereo", true, mode == 1);
+    menu.addItem(4, "Stereo MonoIn", true, mode == 3);
     menu.addItem(3, "Ping-Pong", true, mode == 2);
 
     auto menuPos = localPointToGlobal(modeBtn.getBounds().getBottomLeft());

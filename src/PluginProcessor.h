@@ -56,6 +56,7 @@ public:
     double timeInSeconds = 0.f;
     int64_t lastSamplePosition = 0;
     bool clearDelayOnStop = true;
+    bool useMixKnob = false;
 
     // UI State
     String presetName = "-- Init --";
