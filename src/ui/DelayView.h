@@ -43,6 +43,7 @@ public:
     void drawInfo(Graphics& g);
 
     void updateInfo();
+    void showMenu();
 
 private:
     SirialAudioProcessorEditor& editor;
@@ -50,6 +51,7 @@ private:
     std::unique_ptr<ValuePicker> ampPicker;
     std::unique_ptr<ValuePicker> feedbkPicker;
     TextButton globalFeedbk;
+    TextButton menuBtn;
 
     Point<int> last_mouse_position{};
     int mouseOverBase = -1;

@@ -39,6 +39,7 @@ AudioProcessorValueTreeState::ParameterLayout SirialAudioProcessor::createParame
     layout.add(std::make_unique<AudioParameterInt>("ntaps", "Num Taps", 1, 16, 4));
     layout.add(std::make_unique<AudioParameterBool>("reverse", "Reverse", false));
     layout.add(std::make_unique<AudioParameterBool>("link", "Link", false));
+    layout.add(std::make_unique<AudioParameterBool>("triplet_grid", "Triplet Grid", false));
 
     layout.add(std::make_unique<AudioParameterChoice>("time_mode", "Time Mode", StringArray{"Millis", "Straight", "Tripplet", "Dotted" }, 1));
     layout.add(std::make_unique<AudioParameterChoice>("time_sync", "Time Sync", StringArray{"1/64", "1/32", "1/16", "1/8", "1/4", "1/2", "1/1"}, 4));

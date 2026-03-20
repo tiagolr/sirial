@@ -52,6 +52,10 @@ DelayView::DelayView(SirialAudioProcessorEditor& p)
 			param->setValueNotifyingHost(param->getValue() > 0.f ? 0.f : 1.f);
 		};
 
+	addAndMakeVisible(menuBtn);
+	menuBtn.setAlpha(0.f);
+	menuBtn.onClick = [this] { showMenu(); };
+
 	updateInfo();
 }
 
@@ -93,7 +97,7 @@ void DelayView::parameterChanged(const juce::String& parameterID, float)
 		});
 }
 
-void DelayView::mouseExit(const MouseEvent& e)
+void DelayView::mouseExit(const MouseEvent&)
 {
 	mouseOverBase = -1;
 	repaint();
@@ -350,6 +354,7 @@ void DelayView::resized()
 	ampPicker->setBounds(infob.withTrimmedLeft(75.f).withWidth(110.f).toNearestInt());
 	feedbkPicker->setBounds(infob.withTrimmedLeft(75.f + 110.f).withWidth(110.f).toNearestInt());
 	globalFeedbk.setBounds(infob.withTrimmedLeft(75.f + 220.f - 30.f).withWidth(50.f).toNearestInt());
+	menuBtn.setBounds((int)b.getRight() - 20, (int)b.getY(), 20, 20);
 }
 
 void DelayView::paint(Graphics& g)
@@ -399,6 +404,8 @@ void DelayView::paint(Graphics& g)
 		bases_right[t] = Rectangle<float>(x - TAP_BASE_W / 2.f, viewb.getCentreY(), TAP_BASE_W, TAP_BASE_H);
 	}
 
+	UIUtils::drawTriangle(g, menuBtn.getBounds().reduced(6).translated(-1, 3).toFloat(), 2, Colour(COLOR_NEUTRAL));
+
 	g.setColour(Colour(COLOR_NEUTRAL));
 	g.drawHorizontalLine((int)viewb.getY(), viewb.getX(), viewb.getRight());
 	g.drawHorizontalLine((int)viewb.getBottom(), viewb.getX(), viewb.getRight());
@@ -413,14 +420,11 @@ void DelayView::paint(Graphics& g)
 
 void DelayView::drawGrid(Graphics& g)
 {
-	bool isTriplet = timeMode == Delay::Triplet;
-	bool isDotted = timeMode == Delay::Dotted;
+	bool isTriplet = (bool)editor.audioProcessor.params.getRawParameterValue("triplet_grid")->load();
 	int grid = isTriplet ? 3 * (ntaps + 1) : 4 * (ntaps + 1);
 
 	float gridx = viewb.getWidth() / grid;
 	float gridy = viewb.getHeight() / 8;
-
-	if (isDotted) gridx *= 1.5f;
 
 	g.setColour(Colours::white.withAlpha(0.1f)); // map score into min + score * (max - min)
 	for (int i = 0; i < grid + 1; ++i)
@@ -472,7 +476,6 @@ void DelayView::drawGrid(Graphics& g)
 		else 
 		{
 			text = String(num);
-			if (isDotted) text += "D";
 		}
 		g.drawText(text, Rectangle<int>({ x - 43, (int)viewb.getY() - 15, 40, 15 }), Justification::centredRight);
 	}
@@ -561,10 +564,11 @@ void DelayView::drawTaps(Graphics& g)
 	{
 		for (int t = ntaps-1; t >= 0; --t)
 		{
-			g.setColour(Colour(COLOR_TAP));
-			if (mouseOverBase == t) g.setColour(Colour(COLOR_TAP_HOVER));
+			bool mouseover = mouseOverBase == t;
+			Colour c = mouseover ? Colour(COLOR_TAP_HOVER) : Colour(COLOR_TAP);
+			g.setColour(c);
 			drawBase(bases_mono[t]);
-			drawWickMono(bases_mono[t], taps[t], wetmix, Colour(COLOR_TAP));
+			drawWickMono(bases_mono[t], taps[t], wetmix, c);
 		}
 	}
 	else
@@ -615,4 +619,50 @@ void DelayView::drawInfo(Graphics& g)
 		g.setColour(Colour(COLOR_NEUTRAL));
 		g.drawText("Local", globalFeedbk.getBounds(), Justification::centred);
 	}
+}
+
+void DelayView::showMenu()
+{
+	auto tripletGrid = (bool)editor.audioProcessor.params.getRawParameterValue("triplet_grid")->load();
+
+	PopupMenu menu;
+	menu.addItem(1, "Triplet Grid", true, tripletGrid);
+	menu.addSeparator();
+	PopupMenu feedbackMenu;
+	feedbackMenu.addItem(20, "Set all taps global feedback");
+	feedbackMenu.addItem(21, "Set first tap global feedback");
+
+	menu.addSubMenu("Feedback", feedbackMenu);
+
+	auto menuPos = localPointToGlobal(menuBtn.getBounds().getBottomLeft());
+	menu.showMenuAsync(PopupMenu::Options()
+		.withTargetComponent(*this)
+		.withTargetScreenArea({ menuPos.getX(), menuPos.getY(), 1, 1 }),
+		[this](int result)
+		{
+			if (result == 0) return;
+			else if (result == 1)
+			{
+				auto param = editor.audioProcessor.params.getParameter("triplet_grid");
+				param->setValueNotifyingHost(param->getValue() > 0.f ? 0.f : 1.f);
+				repaint();
+			}
+			else if (result == 20)
+			{
+				for (int t = 0; t < MAX_TAPS; ++t)
+				{
+					auto param = editor.audioProcessor.params.getParameter("tap" + String(t) + "_feedback_global");
+					param->setValueNotifyingHost(1.f);
+				}
+			}
+			else if (result == 21)
+			{
+				for (int t = 0; t < MAX_TAPS; ++t)
+				{
+					auto param = editor.audioProcessor.params.getParameter("tap" + String(t) + "_feedback_global");
+					param->setValueNotifyingHost((float)(t == 0));
+				}
+			}
+		}
+	);
 }
