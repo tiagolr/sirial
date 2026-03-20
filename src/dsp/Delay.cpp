@@ -24,6 +24,8 @@ void Delay::clear()
     }
     revL.clear();
     revR.clear();
+    revposL = 0;
+    revposR = 0;
 }
 
 void Delay::prepare(float _srate)
