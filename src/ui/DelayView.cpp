@@ -265,7 +265,7 @@ void DelayView::mouseDrag(const MouseEvent& e)
 			posnxt = nextTap.timeR; // keep next pos at same place
 		if (posnxt == 0 && tap.timeR >= 1.f)
 			pos = tap.timeR; // keep pos at same place
-		if (cumsumL + pos >= ntaps + 1.f)
+		if (cumsumR + pos >= ntaps + 1.f)
 			pos = tap.timeR; // prevent last tap from going off the viewport
 
 		tap.timeR = pos;

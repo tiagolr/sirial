@@ -19,24 +19,25 @@
 
 </div>
 
-**Sirial** is a Rhythmic Delay where each tap can be placed and configured with different amplitudes and feedback giving total control on how the delay responds and the patterns it creates.
-
-It is loosely based on EchoBoy Tap mode, with the novelty that it uses _serial delay lines_ instead of delay taps, this hybrid approach enables the versatility of multi-tap delays with the natural decay (optional) and coloring of standard delays, producing a more pleasant and realistic sound.
-
-The main advantage of using serial delay lines is that any effects on the feedback path, like damping, are applied on each tap like normal delays, it also enables natural decay over the taps and more importantly allows for classic modes like Ping-Pong or cross feedback. This comes at a cost of complexity and CPU usage, not that the serial delay lines are expensive its just that multiple taps using a single delay line are extremely cheap.
-
-This plug-in doesn't include many effects since applying them on each tap can be prohibitively costly, for example feedback pitch-shift or saturation would be computed each sample for 16 delay lines * 2 channels. The effects included are only pre or post delay, any pre or post FX can be added outside the plug-in in any DAW by using FX buses. If you are looking for a typical delay with more FXs and modes checkout [QDelay](https://github.com/tiagolr/qdelay).
-
 <div align="center">
 
 ![Screenshot](./doc/sirial.png)
 
 </div>
 
+**Sirial** is a Rhythmic Delay where each tap can be placed and configured with different amplitudes and feedback giving total control on how the delay responds and the patterns it creates.
+
+It is loosely based on EchoBoy Tap mode, with the novelty that it uses _serial delay lines_ instead of delay taps, this hybrid approach enables the versatility of multi-tap delays with the natural decay (optional) and coloring of standard delays, producing a more pleasant and realistic sound.
+
+The main advantage of using serial delay lines is that any effects on the feedback path, like damping, are applied on each tap like normal delays, it also enables natural decay over the taps and allows for classic modes like Ping-Pong or cross feedback. This comes at a cost of complexity and CPU usage, not that the serial delay lines are expensive its just that multiple taps on a single delay line are extremely cheap.
+
+This plug-in doesn't include many effects since applying them on each tap can be prohibitively costly, for example feedback pitch-shift or saturation would be computed each sample for 16 delay lines * 2 channels. The effects included are only pre or post delay, any pre or post FX can be added outside the plug-in in any DAW by using FX buses. If you are looking for a typical delay with more FXs and modes checkout [QDelay](https://github.com/tiagolr/qdelay).
+
 ## Features
 
   * **16 Serial Delay Lines** allows to build intricate delay patterns
-  * **Stereo Patterns** with different offsets for left and right taps
+  * **Intuitive UI** to configure the taps offset and amplitude
+  * **Stereo Taps** with different offsets for left and right channels
   * **Ping-Pong Mode** where the feedback is crossed on each tap
   * **Delay Reverse** mode
   * **Basic Effects** like damping, saturation and diffusion
