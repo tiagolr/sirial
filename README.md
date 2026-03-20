@@ -48,6 +48,16 @@ This plug-in doesn't include many effects since applying them on each tap can be
 * [Download latest release](https://github.com/tiagolr/sirial/releases)
 * Current builds include VST3 for Windows, VST3 and LV2 for Linux and AU and VST3 for macOS.
 
+## Manual
+
+Most of the delay features are self-explanatory, there is no need for a manual other than explaining a few details.
+
+Taps are serial delay lines in this plugin, each tap has feedback and amplitude, the amplitude is a gain multiplier applied to each tap read value, feedback is the amount the signal drops when the tap repeats itself. This may not be the most intuitive but after grasping how it works it becomes second nature how the sound decays or is attenuated on each tap.
+
+On the viewport menu (small triangle on the top right corner) the taps can be set in bulk to use the global feedback from the feedback knob, or use individual feedback per tap. The two most common settings are using the feedback knob to control all taps decay, this produces natural sounding decay that can be found on most delays and is the default mode. The other option is to use individual feedback and control only the first tap decay using the feedback knob, if the individual feedback is set to 100%, the delay will only decay after all taps play and the first tap repeats again. This is how other tap delays, and classic Ping-Pong mode effect works.
+
+There is also an option to sum channels instead of collapsing when panning. The way it works is that instead of removing one channel when panning it sums the signal into the other channel, for example stereo taps L-R-L-R-L collapsed to the right become X-R-X-R-X-R, when hard-panned and summed to the right become R-R-R-R-R-R, it moves the panned delay taps to the other side instead of silencing that channel.
+
 ## Tips
 
 * Use shift to fine tune taps position or knobs value.
@@ -55,7 +65,6 @@ This plug-in doesn't include many effects since applying them on each tap can be
 * To produce decay only on the first tap, use the viewport menu or manually set each tap feedback to local and give it 100% feedback.
 * There is a small button next to feedback knob that turns _reverse mode_ on.
 * Panning collapses one of the channels by default but there is an alternative mode where the taps are summed onto the same channel instead.
-
 
 ## MacOS
 
