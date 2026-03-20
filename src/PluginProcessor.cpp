@@ -55,10 +55,10 @@ AudioProcessorValueTreeState::ParameterLayout SirialAudioProcessor::createParame
         layout.add(std::make_unique<AudioParameterFloat>(prefix + "amp_l", prefixnm + "Amp Left", NormalisableRange<float>(0.f, 1.f), 1.f));
         layout.add(std::make_unique<AudioParameterFloat>(prefix + "amp_r", prefixnm + "Amp Right", NormalisableRange<float>(0.f, 1.f), 1.f));
         layout.add(std::make_unique<AudioParameterFloat>(prefix + "feedback", prefixnm + "Feedback", NormalisableRange<float>(0.f, 1.f), t == 0 ? 0.5f : 1.f));
-        layout.add(std::make_unique<AudioParameterBool>(prefix + "feedback_global", prefixnm + "Feedback Global", t == 0));
+        layout.add(std::make_unique<AudioParameterBool>(prefix + "feedback_global", prefixnm + "Feedback Global", true));
     }
 
-    layout.add(std::make_unique<AudioParameterFloat>("feedback", "Feedback", 0.f, 1.f, 0.0f));
+    layout.add(std::make_unique<AudioParameterFloat>("feedback", "Feedback", 0.f, 1.f, 0.5f));
     layout.add(std::make_unique<AudioParameterFloat>("lowcut", "Lowcut", NormalisableRange<float>(20.f, 20000.f, 1.f, 0.4f), 20.f));
     layout.add(std::make_unique<AudioParameterFloat>("highcut", "highcut", NormalisableRange<float>(20.f, 20000.f, 1.f, 0.4f), 20000.f));
     layout.add(std::make_unique<AudioParameterFloat>("pipo_width", "Pipo Width", -1.f, 1.f, 1.f));

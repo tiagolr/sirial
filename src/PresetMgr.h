@@ -15,36 +15,53 @@ public:
 	};
 
 	String dir;
-	inline static const std::array<Preset, 0> factoryPresets =
+	inline static const std::array<Preset, 42> factoryPresets =
     {{
-        /*
         { "-- Init --", "", BinaryData::init_xml, BinaryData::init_xmlSize },
-        { "16 Zone", "Basic", BinaryData::basic16zone_xml, BinaryData::basic16zone_xmlSize },
-        { "Dual Darker", "Basic", BinaryData::basicdualdarker_xml, BinaryData::basicdualdarker_xmlSize },
-        { "Dub Like", "Basic", BinaryData::basicdublike_xml, BinaryData::basicdublike_xmlSize },
-        { "Ping-Mid-Pong", "Basic", BinaryData::basicpingmidpong_xml, BinaryData::basicpingmidpong_xmlSize},
-        { "Quarters", "Basic", BinaryData::basicquarters_xml, BinaryData::basicquarters_xmlSize },
-        { "Smeared", "Basic", BinaryData::basicsmeared_xml, BinaryData::basicsmeared_xmlSize },
-        { "Smooth Vibes", "Basic", BinaryData::basicsmoothvibes_xml, BinaryData::basicsmoothvibes_xmlSize },
-        { "Swing Quarters", "Basic", BinaryData::basicswingquarters_xml, BinaryData::basicswingquarters_xmlSize },
-        { "Taped", "Basic", BinaryData::basictaped_xml, BinaryData::basictaped_xmlSize },
-        { "Tape Loop", "Basic", BinaryData::basictapeloop_xml, BinaryData::basictapeloop_xmlSize },
-        { "Wider", "Basic", BinaryData::basicwider_xml, BinaryData::basicwider_xmlSize },
-        { "Slight Groove", "Drums", BinaryData::drumsslightgroove_xml, BinaryData::drumsslightgroove_xmlSize },
-        { "More Groove", "Drums", BinaryData::drumsmoregroove_xml, BinaryData::drumsmoregroove_xmlSize },
-        { "Phatter", "Drums", BinaryData::drumsphatter_xml, BinaryData::drumsphatter_xmlSize },
-        { "Punchy Echo", "Drums", BinaryData::drumspunchyecho_xml, BinaryData::drumspunchyecho_xmlSize },
-        { "Shimmer Echo", "Drums", BinaryData::drumsshimmerecho_xml, BinaryData::drumsshimmerecho_xmlSize },
-        { "Rush Beat", "Drums", BinaryData::drumsrushbeat_xml, BinaryData::drumsrushbeat_xmlSize },
-        { "Snare Dub", "Drums", BinaryData::drumssnaredub_xml, BinaryData::drumssnaredub_xmlSize },
-        { "Harmonizer", "FX", BinaryData::fxharmonizer_xml, BinaryData::fxharmonizer_xmlSize },
-        { "Deharmonizer", "FX", BinaryData::fxdeharmonizer_xml, BinaryData::fxdeharmonizer_xmlSize },
-        { "Diffused", "FX", BinaryData::fxdiffused_xml, BinaryData::fxdiffused_xmlSize },
-        { "Duct Tape", "FX", BinaryData::fxducttape_xml, BinaryData::fxducttape_xmlSize },
-        { "Metallizer", "FX", BinaryData::fxmetallizer_xml, BinaryData::fxmetallizer_xmlSize },
-        { "Short Verb", "FX", BinaryData::fxshortreverb_xml, BinaryData::fxshortreverb_xmlSize },
-        { "Octaver", "FX", BinaryData::fxoctaver_xml, BinaryData::fxoctaver_xmlSize }
-         */
+
+        { "Rise", "Basic", BinaryData::Rise_xml, BinaryData::Rise_xmlSize },
+        { "Fall", "Basic", BinaryData::Fall_xml, BinaryData::Fall_xmlSize },
+        { "Fall And Rise", "Basic", BinaryData::Fall_and_Rise_xml, BinaryData::Fall_and_Rise_xmlSize },
+        { "Alternate", "Basic", BinaryData::Alternate_xml, BinaryData::Alternate_xmlSize },
+        { "Swing", "Basic", BinaryData::Swing_xml, BinaryData::Swing_xmlSize },
+        { "Shuffle", "Basic", BinaryData::Shuffle_xml, BinaryData::Shuffle_xmlSize },
+        { "Ping-Pong", "Basic", BinaryData::PingPong_xml, BinaryData::PingPong_xmlSize },
+        { "Ping-Center-Pong", "Basic", BinaryData::PingCenterPong_xml, BinaryData::PingCenterPong_xmlSize },
+        { "Haas", "Basic", BinaryData::Haas_xml, BinaryData::Haas_xmlSize },
+        { "Triplet Taps", "Basic", BinaryData::Triplet_Taps_xml, BinaryData::Triplet_Taps_xmlSize },
+        { "Reverse Triplets", "Basic", BinaryData::Reverse_Tripplets_xml, BinaryData::Reverse_Tripplets_xmlSize },
+        
+        { "One Two Three", "Mono", BinaryData::One_Two_Three_xml, BinaryData::One_Two_Three_xmlSize},
+        { "Pairs", "Mono", BinaryData::Pairs_xml, BinaryData::Pairs_xmlSize},
+        { "Dots", "Mono", BinaryData::Dots_xml, BinaryData::Dots_xmlSize },
+        { "Faster", "Mono", BinaryData::Faster_xml, BinaryData::Faster_xmlSize},
+        { "Slowing Down", "Mono", BinaryData::Slowing_Down_xml, BinaryData::Slowing_Down_xmlSize},
+        { "More Shuffle", "Mono", BinaryData::More_Shuffle_xml, BinaryData::More_Shuffle_xmlSize},
+        { "Tris", "Mono", BinaryData::Tris_xml, BinaryData::Tris_xmlSize},
+        { "Pulse", "Mono", BinaryData::Pulse_xml, BinaryData::Pulse_xmlSize},
+        { "Spaced", "Mono", BinaryData::Spaced_xml, BinaryData::Spaced_xmlSize},
+        { "Pattern1", "Mono", BinaryData::Pattern1_xml, BinaryData::Pattern1_xmlSize},
+        { "Pattern2", "Mono", BinaryData::Pattern2_xml, BinaryData::Pattern2_xmlSize},
+        { "Pattern3", "Mono", BinaryData::Pattern3_xml, BinaryData::Pattern3_xmlSize},
+        { "Pattern4", "Mono", BinaryData::Pattern4_xml, BinaryData::Pattern4_xmlSize},
+        { "Trance1", "Mono", BinaryData::Trance2_xml, BinaryData::Trance2_xmlSize},
+        { "Trance2", "Mono", BinaryData::Trance3_xml, BinaryData::Trance3_xmlSize},
+
+        { "Spiral", "Stereo", BinaryData::Spiral_xml, BinaryData::Spiral_xmlSize},
+        { "Dotted Seq", "Stereo", BinaryData::Dotted_Seq_xml, BinaryData::Dotted_Seq_xmlSize},
+        { "Ping-Less-Pong", "Stereo", BinaryData::PingLessPong_xml, BinaryData::PingLessPong_xmlSize},
+        { "Metronome", "Stereo", BinaryData::Metronome_xml, BinaryData::Metronome_xmlSize},
+        { "Arrhythmia", "Stereo", BinaryData::Arrhythmia_xml, BinaryData::Arrhythmia_xmlSize},
+        { "Sequence1", "Stereo", BinaryData::Sequence1_xml, BinaryData::Sequence1_xmlSize},
+        { "Sequence2", "Stereo", BinaryData::Sequence2_xml, BinaryData::Sequence2_xmlSize},
+        { "Sequence3", "Stereo", BinaryData::Sequence3_xml, BinaryData::Sequence3_xmlSize},
+        { "Sequence4", "Stereo", BinaryData::Sequence4_xml, BinaryData::Sequence4_xmlSize},
+        { "Sequence5", "Stereo", BinaryData::Sequence5_xml, BinaryData::Sequence5_xmlSize},
+        { "Sequence6", "Stereo", BinaryData::Sequence6_xml, BinaryData::Sequence6_xmlSize},
+        { "Sequence7", "Stereo", BinaryData::Sequence7_xml, BinaryData::Sequence7_xmlSize},
+        { "Sequence8", "Stereo", BinaryData::Sequence8_xml, BinaryData::Sequence8_xmlSize},
+        { "Sequence9", "Stereo", BinaryData::Sequence9_xml, BinaryData::Sequence9_xmlSize},
+        { "Sequence10", "Stereo", BinaryData::Sequence10_xml, BinaryData::Sequence10_xmlSize},
     }};
 
 	PresetMgr(SirialAudioProcessor& proc, String _dir);

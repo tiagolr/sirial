@@ -433,7 +433,7 @@ void DelayView::drawGrid(Graphics& g)
 		float x = (float)(viewb.getX() + std::round(gridx * i) + 0.5f);
 
 		g.setColour(Colours::white.withAlpha(isBold ? 0.1f : 0.05f));
-		if (grid > 32 && !isTriplet && i % 2 == 1)
+		if (grid > 36 && !isTriplet && i % 2 == 1)
 			g.setColour(Colours::transparentBlack);
 		g.drawLine(x, viewb.getY(), x, viewb.getY() + viewb.getHeight());
 	}

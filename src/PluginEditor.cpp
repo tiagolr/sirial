@@ -53,7 +53,7 @@ SirialAudioProcessorEditor::SirialAudioProcessorEditor (SirialAudioProcessor& p)
     nextPresetBtn.setBounds(Rectangle<int>(25, 25).withY(presetBtn.getY()).withX(presetBtn.getRight()));
     nextPresetBtn.onClick = [this]
         {
-            //audioProcessor.presetmgr->loadNext();
+            audioProcessor.presetmgr->loadNext();
         };
 
     addAndMakeVisible(prevPresetBtn);
@@ -61,7 +61,7 @@ SirialAudioProcessorEditor::SirialAudioProcessorEditor (SirialAudioProcessor& p)
     prevPresetBtn.setBounds(Rectangle<int>(25, 25).withY(presetBtn.getY()).withRightX(presetBtn.getX()));
     prevPresetBtn.onClick = [this]
         {
-            //audioProcessor.presetmgr->loadPrev();
+            audioProcessor.presetmgr->loadPrev();
         };
 
     addAndMakeVisible(saveBtn);
@@ -582,8 +582,8 @@ void SirialAudioProcessorEditor::showPresetsMenu()
 {
     PopupMenu menu;
     PopupMenu basicPresets;
-    PopupMenu drumsPresets;
-    PopupMenu fxPresets;
+    PopupMenu monoPresets;
+    PopupMenu stereoPresets;
     for (int i = 0; i < PresetMgr::factoryPresets.size(); ++i)
     {
         auto& preset = PresetMgr::factoryPresets[i];
@@ -591,15 +591,15 @@ void SirialAudioProcessorEditor::showPresetsMenu()
             menu.addItem(i + 1, preset.name, true, audioProcessor.presetName == preset.name);
         else if (preset.category == "Basic")
             basicPresets.addItem(i + 1, preset.name, true, audioProcessor.presetName == preset.name);
-        else if (preset.category == "Drums")
-            drumsPresets.addItem(i + 1, preset.name, true, audioProcessor.presetName == preset.name);
-        else if (preset.category == "FX")
-            fxPresets.addItem(i + 1, preset.name, true, audioProcessor.presetName == preset.name);
+        else if (preset.category == "Mono")
+            monoPresets.addItem(i + 1, preset.name, true, audioProcessor.presetName == preset.name);
+        else if (preset.category == "Stereo")
+            stereoPresets.addItem(i + 1, preset.name, true, audioProcessor.presetName == preset.name);
     }
 
     menu.addSubMenu("Basic", basicPresets);
-    menu.addSubMenu("Drums", drumsPresets);
-    menu.addSubMenu("FX", fxPresets);
+    menu.addSubMenu("Mono", monoPresets);
+    menu.addSubMenu("Stereo", stereoPresets);
 
     PopupMenu userMenu;
     File parent = File(audioProcessor.presetmgr->dir);
