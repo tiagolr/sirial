@@ -628,9 +628,10 @@ void DelayView::showMenu()
 	PopupMenu menu;
 	menu.addItem(1, "Triplet Grid", true, tripletGrid);
 	menu.addSeparator();
+	menu.addItem(2, "Reset Taps");
 	PopupMenu feedbackMenu;
 	feedbackMenu.addItem(20, "Set all taps global feedback");
-	feedbackMenu.addItem(21, "Set first tap global feedback");
+	feedbackMenu.addItem(21, "Set only first tap global feedback");
 
 	menu.addSubMenu("Feedback", feedbackMenu);
 
@@ -646,6 +647,21 @@ void DelayView::showMenu()
 				auto param = editor.audioProcessor.params.getParameter("triplet_grid");
 				param->setValueNotifyingHost(param->getValue() > 0.f ? 0.f : 1.f);
 				repaint();
+			}
+			else if (result == 2)
+			{
+				for (int t = 0; t < MAX_TAPS; ++t)
+				{
+					String prefix = "tap" + String(t) + "_";
+					auto param = editor.audioProcessor.params.getParameter(prefix + "time_l");
+					param->setValueNotifyingHost(param->getDefaultValue());
+					param = editor.audioProcessor.params.getParameter(prefix + "time_r");
+					param->setValueNotifyingHost(param->getDefaultValue());
+					param = editor.audioProcessor.params.getParameter(prefix + "amp_l");
+					param->setValueNotifyingHost(param->getDefaultValue());
+					param = editor.audioProcessor.params.getParameter(prefix + "amp_r");
+					param->setValueNotifyingHost(param->getDefaultValue());
+				}
 			}
 			else if (result == 20)
 			{
