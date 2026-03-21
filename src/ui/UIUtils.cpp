@@ -282,3 +282,64 @@ void UIUtils::drawReverse(Graphics& g, juce::Rectangle<float> b, Colour color)
     UIUtils::drawTriangle(g, Rectangle<float>(r * 2, r * 2).withX(b.getCentreX() - r * 2 + 1).withY(b.getCentreY() - r), 3, color);
     UIUtils::drawTriangle(g, Rectangle<float>(r * 2, r * 2).withX(b.getCentreX() - 1).withY(b.getCentreY() - r), 3, color);
 }
+
+void UIUtils::drawSineWave(juce::Graphics& g, juce::Rectangle<float> bounds, int n, Colour c)
+{
+    const float x = bounds.getX();
+    const float y = bounds.getY();
+    const float w = bounds.getWidth();
+    const float h = bounds.getHeight();
+
+    juce::Path path;
+
+    // Start at the left edge, vertically centered
+    path.startNewSubPath(x, y + h * 0.5f);
+
+    // Number of points to draw
+    for (int i = 0; i <= w; ++i)
+    {
+        const float t = (float)i / (float)w;
+        const float px = x + t * w;
+        const float angle = t * n * juce::MathConstants<float>::twoPi;
+        const float py = y + h * 0.5f - std::sin(angle) * (h * 0.5f);
+        path.lineTo(px, py);
+    }
+
+    g.setColour(c);
+    g.strokePath(path, juce::PathStrokeType(1.0f));
+}
+
+void UIUtils::drawSnH(juce::Graphics& g, Rectangle<float> bounds, Colour c)
+{
+    Path p;
+
+    p.startNewSubPath(0.0f, 0.5f);
+    p.lineTo(5.5f, 0.5f);
+    p.lineTo(5.5f, 9.5f);
+    p.lineTo(10.5f, 9.5f);
+    p.lineTo(10.5f, 2.95455f);
+    p.lineTo(14.5f, 2.95455f);
+
+    p.scaleToFit(bounds.getX(), bounds.getY(),
+        bounds.getWidth(), bounds.getHeight(),
+        false); // keep proportions
+
+    g.setColour(c);
+    g.strokePath(p, PathStrokeType(1.f));
+}
+
+void UIUtils::drawPerlin(juce::Graphics& g, Rectangle<float> bounds, Colour c)
+{
+    Path p;
+
+    p.startNewSubPath(0.0f, 9.5f);
+    p.cubicTo(4.9f, 9.5f, 3.18892f, 0.5f, 7.0f, 0.5f);
+    p.cubicTo(10.8111f, 0.5f, 10.5f, 9.5f, 14.0f, 9.5f);
+
+    p.scaleToFit(bounds.getX(), bounds.getY(),
+        bounds.getWidth(), bounds.getHeight(),
+        false); // keep proportions
+
+    g.setColour(c);
+    g.strokePath(p, PathStrokeType(1.f));
+}

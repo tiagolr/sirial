@@ -42,6 +42,7 @@ public:
     void showPresetsMenu();
     void showModeMenu();
     void showModRateMenu();
+    void showModModeMenu();
     void showModTabMenu();
     void savePreset();
     void refreshOutGainLabel();
@@ -91,6 +92,7 @@ private:
     std::unique_ptr<Rotary> diffSize;
     TextButton modTabBtn;
     TextButton modModeBtn;
+    TextButton modRateModeBtn;
 
     std::unique_ptr<Rotary> duckThres;
     std::unique_ptr<Rotary> duckAmt;

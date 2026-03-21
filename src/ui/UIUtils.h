@@ -25,4 +25,7 @@ static void drawHighpass(Graphics& g, Rectangle<float> bounds, Colour c, float s
 static void drawLowpass(Graphics& g, Rectangle<float> bounds, Colour c, float scale = 1.f);
 static void drawSave(Graphics& g, Rectangle<float> bounds, Colour c);
 static void drawReverse(Graphics& g, Rectangle<float> bounds, Colour c);
+static void drawSineWave(juce::Graphics& g, Rectangle<float> bounds, int n, Colour c);
+static void drawSnH(juce::Graphics& g, Rectangle<float> bounds, Colour c);
+static void drawPerlin(juce::Graphics& g, Rectangle<float> bounds, Colour c);
 };

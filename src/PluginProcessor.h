@@ -64,8 +64,6 @@ public:
     std::atomic<float> rmsLeft = 0.f;
     std::atomic<float> rmsRight = 0.f;
     std::atomic<float> duckEnv = 0.f;
-    bool drawWaveform = true;
-    bool isLoadingState = false;
     Delay::DelayMode lmode = Delay::Mono;
     int modTab = 0; // mod, modRand, Saturation
 

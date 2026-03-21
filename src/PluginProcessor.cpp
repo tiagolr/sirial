@@ -68,7 +68,7 @@ AudioProcessorValueTreeState::ParameterLayout SirialAudioProcessor::createParame
     layout.add(std::make_unique<AudioParameterFloat>("mod_depth", "Modulation Amt", 0.f, 1.f, 0.0f));
     layout.add(std::make_unique<AudioParameterFloat>("mod_rate", "Modulation Rate", NormalisableRange<float>(0.01f, 10.f, 0.0001f, 0.5f), 0.15f));
     layout.add(std::make_unique<AudioParameterChoice>("mod_rate_sync", "Modulation Rate Sync", StringArray{ "1/32", "1/16", "1/8", "1/4", "1/2", "1/1", "2/1", "4/1", "8/1", "16/1", "32/1"}, 5));
-    layout.add(std::make_unique<AudioParameterChoice>("mod_rate_mode", "Modulation Rate Mode", StringArray{ "Hz", "Straight", "Triplet", "Dotted"}, 0));
+    layout.add(std::make_unique<AudioParameterChoice>("mod_rate_mode", "Modulation Rate Mode", StringArray{ "Hz", "Straight", "Triplet", "Dotted"}, 1));
 
     layout.add(std::make_unique<AudioParameterFloat>("pan_dry", "Pan Dry", 0.f, 1.f, 0.5f));
     layout.add(std::make_unique<AudioParameterBool>("pan_dry_sum", "Pan Dry Sum", false));
@@ -171,7 +171,6 @@ void SirialAudioProcessor::saveSettings ()
     if (auto* file = settings.getUserSettings())
     {
         file->setValue("scale", scale);
-        file->setValue("drawWaveform", drawWaveform);
         file->setValue("clearDelayOnStop", clearDelayOnStop);
     }
     settings.saveIfNeeded();
@@ -643,10 +642,8 @@ void SirialAudioProcessor::setStateInformation (const void* data, int sizeInByte
     auto state = ValueTree::fromXml (*xmlState);
     if (!state.isValid()) return;
 
-    isLoadingState = true;
     params.replaceState(state.getChild(0));
     presetName = state.getProperty("preset").toString();
-    isLoadingState = false;
     sendChangeMessage();
 }
 
