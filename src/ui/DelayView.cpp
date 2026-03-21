@@ -350,11 +350,30 @@ void DelayView::resized()
 	auto b = getLocalBounds().toFloat();
 	viewb = b.reduced(20.f);
 	infob = viewb.withHeight(20.f).withY(viewb.getBottom());
-
-	ampPicker->setBounds(infob.withTrimmedLeft(75.f).withWidth(110.f).toNearestInt());
-	feedbkPicker->setBounds(infob.withTrimmedLeft(75.f + 110.f).withWidth(110.f).toNearestInt());
-	globalFeedbk.setBounds(infob.withTrimmedLeft(75.f + 220.f - 30.f).withWidth(50.f).toNearestInt());
 	menuBtn.setBounds((int)b.getRight() - 20, (int)b.getY(), 20, 20);
+
+	ampPicker->setBounds(infob.withTrimmedLeft(75.f + 40.f).withWidth(110.f).toNearestInt());
+	feedbkPicker->setBounds(infob.withTrimmedLeft(75.f + 110.f + 40.f).withWidth(110.f).toNearestInt());
+	globalFeedbk.setBounds(infob.withTrimmedLeft(75.f + 220.f - 30.f + 40.f).withWidth(50.f).toNearestInt());
+}
+
+int DelayView::getTimeSync()
+{
+	auto secondsPerBeat = editor.audioProcessor.secondsPerBeat;
+	if (secondsPerBeat == 0.f) secondsPerBeat = 0.25f;
+
+	float qn = 1.f;
+	if (timeSync == Delay::k1o64) qn = 1.f / 16.f; // 1/64
+	if (timeSync == Delay::k1o32) qn = 1.f / 8.f; // 1/32
+	if (timeSync == Delay::k1o16) qn = 1.f / 4.f; // 1/16
+	if (timeSync == Delay::k1o8) qn = 1.f / 2.f; // 1/8
+	if (timeSync == Delay::k1o4) qn = 1.f / 1.f; // 1/4
+	if (timeSync == Delay::k1o2) qn = 1.f * 2.f; // 1/2
+	if (timeSync == Delay::k1o1) qn = 1.f * 4.f; // 1/1
+	if (timeMode == Delay::Triplet) qn *= 2 / 3.f;
+	if (timeMode == Delay::Dotted) qn *= 1.5f;
+
+	return (int)(qn * secondsPerBeat * 1000.f);
 }
 
 void DelayView::paint(Graphics& g)
@@ -368,6 +387,11 @@ void DelayView::paint(Graphics& g)
 	timeMode = (Delay::TimeMode)editor.audioProcessor.params.getRawParameterValue("time_mode")->load();
 	timeSync = (Delay::TimeSync)editor.audioProcessor.params.getRawParameterValue("time_sync")->load();
 	timeMillis = (int)editor.audioProcessor.params.getRawParameterValue("time_millis")->load();
+
+	if (timeMode > Delay::TimeMode::Millis)
+	{
+		timeMillis = getTimeSync();
+	}
 
 	if (mode == Delay::Mono && selectedTap >= 1337)
 	{
@@ -603,7 +627,14 @@ void DelayView::drawInfo(Graphics& g)
 	auto txt = "Tap " + String(idx + 1);
 	if (mode != Delay::Mono)
 		txt += isLeft ? "L" : "R";
-	g.drawText(txt, infob.withWidth(80), Justification::centredLeft);
+	auto time = (isLeft ? taps[idx].timeL : taps[idx].timeR) * timeMillis;
+	txt += "   ";
+	if (time >= 1000)
+		txt += String((int)(time / 1000)) + "s";
+	else
+		txt += String((int)time) + "ms";
+
+	g.drawText(txt, infob.withWidth(100), Justification::centredLeft);
 
 	bool useGlobalFeedbk = (bool)editor.audioProcessor.params.getRawParameterValue("tap" + String(idx) + "_feedback_global")->load();
 	

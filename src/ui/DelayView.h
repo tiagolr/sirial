@@ -37,6 +37,7 @@ public:
     void updateAmplitudes(const MouseEvent& e);
 
     void resized() override;
+    int getTimeSync();
     void paint(Graphics& g) override;
     void drawGrid(Graphics& g);
     void drawTaps(Graphics& g);
