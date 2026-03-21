@@ -17,6 +17,13 @@ public:
 		StereoMono
 	};
 
+	enum ModMode
+	{
+		LFO,
+		SnH,
+		Perlin
+	};
+
 	enum TimeMode
 	{
 		Millis,
@@ -156,6 +163,7 @@ public:
 
 	void prepare(float _srate);
 	void updateBaseSamples();
+	float getRateSyncQN();
 	void processBlock(float* left, float* right, int nsamps);
 	void processReverse(float& left, float& right, int revsizeL, int revsizeR,
 		int midL, int midR, int fadetotalL, int fadetotalR);
@@ -175,6 +183,11 @@ public:
 private:
 	SirialAudioProcessor& audioProcessor;
 	bool isMono = true;
+	ModMode modMode = LFO;
+	TimeMode modRateMode = Millis; // Hz
+	float modRateSyncQN = 1.f;
+	float modSampleHold = rand() / (float)RAND_MAX;
+	float modPhase = 0.f;
 
 	TimeMode timeMode = Straight;
 	TimeSync timeSync = k1o4;
@@ -183,7 +196,6 @@ private:
 	float globalRand = 0.f; // amplitude randomizer global
 
 	RCFilter modDepthSmooth{};
-	float modPhase = 0.f;
 
 	// reverse delay
 	bool reverse = false;

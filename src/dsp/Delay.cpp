@@ -27,7 +27,6 @@ void Delay::clear()
     revposL = 0;
     revposR = 0;
     sampsCounter = 0;
-    modPhase = 0.f;
 }
 
 void Delay::prepare(float _srate)
@@ -93,6 +92,9 @@ void Delay::onSlider()
     timeMillis = (int)audioProcessor.params.getRawParameterValue("time_millis")->load();
     globalRand = audioProcessor.params.getRawParameterValue("rand_amp")->load();
 
+    modMode = (ModMode)audioProcessor.params.getRawParameterValue("mod_mode")->load();
+    modRateMode = (TimeMode)audioProcessor.params.getRawParameterValue("mod_rate_mode")->load();
+    modRateSyncQN = getRateSyncQN();
 }
 
 void Delay::updateBaseSamples()
@@ -119,6 +121,31 @@ void Delay::updateBaseSamples()
 
     baseSamples = (int)std::ceil(qn * secondsPerBeat * srate);
 }
+
+float Delay::getRateSyncQN()
+{
+    auto rateSync = audioProcessor.params.getRawParameterValue("mod_rate_sync")->load();
+    auto secondsPerBeat = audioProcessor.secondsPerBeat;
+    if (secondsPerBeat == 0.f) secondsPerBeat = 0.25f;
+
+    float qn = 1.f;
+    if (rateSync == 0) qn = 1.f / 8.f; // 1/32
+    if (rateSync == 1) qn = 1.f / 4.f; // 1/16
+    if (rateSync == 2) qn = 1.f / 2.f; // 1/8
+    if (rateSync == 3) qn = 1.f / 1.f; // 1/4
+    if (rateSync == 4) qn = 1.f * 2.f; // 1/2
+    if (rateSync == 5) qn = 1.f * 4.f; // 1/1
+    if (rateSync == 6) qn = 1.f * 8.f; // 2/1
+    if (rateSync == 7) qn = 1.f * 16.f; // 4/1
+    if (rateSync == 8) qn = 1.f * 32.f; // 8/1
+    if (rateSync == 9) qn = 1.f * 64.f; // 16/1
+    if (rateSync == 10) qn = 1.f * 128.f; // 32/1
+    if (modRateMode == Triplet) qn *= 2 / 3.f;
+    if (modRateMode == Dotted) qn *= 1.5f;
+
+    return qn;
+}
+
 
 void Delay::processBlock(float* left, float* right, int nsamps)
 {
@@ -170,7 +197,15 @@ void Delay::processBlock(float* left, float* right, int nsamps)
     float modRate = audioProcessor.params.getRawParameterValue("mod_rate")->load();
     float maxDepth = std::min(taps[0].timeL, taps[0].timeR) * 0.5f;
     modDepth = modDepth * std::min(srate / 250.f, maxDepth);
+    float modPhaseInc = modRate * israte;
 
+    // modulation sync mode
+    if (modRateMode > Millis)
+    {
+        if (audioProcessor.playing)
+            modPhase = (float)std::fmod(audioProcessor.ppqPosition / modRateSyncQN, 1.0);
+        modPhaseInc = (float)(audioProcessor.beatsPerSample / modRateSyncQN);
+    }
 
     // Process samples
     std::array<float, MAX_TAPS> lfeed{};
@@ -182,9 +217,19 @@ void Delay::processBlock(float* left, float* right, int nsamps)
         float mod = 0.f;
         if (mdepth > 1e-5f)
         {
-            modPhase += modRate * israte;
-            while (modPhase > 1.f) modPhase -= 1.f;
-            mod = std::sin(modPhase * MathConstants<float>::twoPi);
+            if (modMode == LFO)
+            {
+                mod = std::sin(modPhase * MathConstants<float>::twoPi);
+            }
+            else
+            {
+                mod = modSampleHold;
+                if (modPhase >= 1.f)
+                    modSampleHold = (rand() / (float)RAND_MAX) * 2.f - 1.f;
+            }
+            modPhase += modPhaseInc;
+            if (modPhase >= 1.f)
+                modPhase -= 1.f;
         }
         mod = mod * mdepth - mdepth;
 

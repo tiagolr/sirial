@@ -46,6 +46,7 @@ public:
 
     // PlayHead state
     bool playing = false;
+    double beatsPerMinute = 120.f;
     double ppqPosition = 0.0;
     double beatsPerSample = 0.00005;
     double beatsPerSecond = 1.0;
