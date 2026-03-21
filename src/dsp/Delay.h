@@ -20,7 +20,6 @@ public:
 	enum ModMode
 	{
 		LFO,
-		SnH,
 		Perlin
 	};
 
@@ -186,8 +185,11 @@ private:
 	ModMode modMode = LFO;
 	TimeMode modRateMode = Millis; // Hz
 	float modRateSyncQN = 1.f;
-	float modSampleHold = rand() / (float)RAND_MAX;
 	float modPhase = 0.f;
+	float lmodPhase = 0.f; // last phase
+	RCFilter modDepthSmooth{};
+	PerlinGen perlin{(uint32_t)rand()};
+
 
 	TimeMode timeMode = Straight;
 	TimeSync timeSync = k1o4;
@@ -195,7 +197,6 @@ private:
 	int baseSamples = 1; // time in samples for global base time
 	float globalRand = 0.f; // amplitude randomizer global
 
-	RCFilter modDepthSmooth{};
 
 	// reverse delay
 	bool reverse = false;

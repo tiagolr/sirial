@@ -223,10 +223,11 @@ void Delay::processBlock(float* left, float* right, int nsamps)
             }
             else
             {
-                mod = modSampleHold;
-                if (modPhase >= 1.f)
-                    modSampleHold = (rand() / (float)RAND_MAX) * 2.f - 1.f;
+                mod = perlin.process(modPhase);
+                if (modPhase < lmodPhase)
+                    perlin.next();
             }
+            lmodPhase = modPhase;
             modPhase += modPhaseInc;
             if (modPhase >= 1.f)
                 modPhase -= 1.f;

@@ -320,3 +320,63 @@ private:
     uint32_t original_seed;
     uint32_t state;
 };
+
+class PerlinGen {
+public:
+    PerlinGen(uint32_t seed)
+        : original_seed(seed), state(seed) 
+    {
+        rand2 = makeRand();
+        next();
+    }
+
+    float makeRand()
+    {
+        uint32_t x = state;
+        x ^= x << 13;
+        x ^= x >> 17;
+        x ^= x << 5;
+        state = x;
+        return (int32_t)x * mult; // float(x)/2^31 [-1, 1]
+    }
+
+    inline float perlinFade(float t) {
+        return t * t * (t * -2.f + 3.f);
+    }
+
+    inline float perlinInterpolate(float a, float b, float t) {
+        return a + perlinFade(t) * (b - a);
+    }
+
+    void next()
+    {
+        rand1 = rand2;
+        rand2 = makeRand();
+    }
+
+    float process(float t)
+    {
+        return perlinInterpolate(rand1, rand2, t);
+    }
+
+    void reset()
+    {
+        state = original_seed;
+        rand2 = makeRand();
+        next();
+    }
+
+    void reseed(uint32_t seed)
+    {
+        state = seed;
+        rand2 = makeRand();
+        next();
+    }
+
+private:
+    float rand1 = 0.f;
+    float rand2 = 0.f;
+    const float mult = 1.0f / 2147483648.0f;
+    uint32_t original_seed;
+    uint32_t state;
+};
