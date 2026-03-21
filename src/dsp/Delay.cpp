@@ -50,6 +50,7 @@ void Delay::prepare(float _srate)
         amp.reset(1.f);
     }
 
+    modSnHSmooth.setup(0.1f, srate);
     modDepthSmooth.setup(0.15f, srate);
     sampsPreFade = (int)std::ceil(_srate * 0.01f); // 10 ms plenty of time for amplitudes fade
 
@@ -220,6 +221,12 @@ void Delay::processBlock(float* left, float* right, int nsamps)
             if (modMode == LFO)
             {
                 mod = std::sin(modPhase * MathConstants<float>::twoPi);
+            }
+            else if (modMode == SnH)
+            {
+                mod = modSnHSmooth.process(modSnH);
+                if (modPhase < lmodPhase)
+                    modSnH = rand() / float(RAND_MAX) * 2.f - 1.f;
             }
             else
             {

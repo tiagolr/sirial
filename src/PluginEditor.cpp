@@ -369,12 +369,12 @@ void SirialAudioProcessorEditor::toggleUIComponents()
     auto modTab = audioProcessor.modTab;
     int modRateMode = (int)audioProcessor.params.getRawParameterValue("mod_rate_mode")->load();
 
-    modRate->setVisible(modTab < 2 && modRateMode == 0);
-    modRateSync->setVisible(modTab < 2 && modRateMode > 0);
-    modModeBtn.setVisible(modTab < 2);
-    modDepth->setVisible(modTab < 2);
-    distColor->setVisible(modTab == 2);
-    distDrive->setVisible(modTab == 2);
+    modRate->setVisible(modTab < 3 && modRateMode == 0);
+    modRateSync->setVisible(modTab < 3 && modRateMode > 0);
+    modModeBtn.setVisible(modTab < 3);
+    modDepth->setVisible(modTab < 3);
+    distColor->setVisible(modTab == 3);
+    distDrive->setVisible(modTab == 3);
 
     MessageManager::callAsync([this] { repaint(); });
 }
@@ -512,7 +512,7 @@ void SirialAudioProcessorEditor::paint (Graphics& g)
 
     g.setColour(Colour(COLOR_NEUTRAL));
     g.drawText("DAMP", Rectangle<int>(KNOB_WIDTH, 25).withX(lowcut->getX()).withY(lowcut->getY() - 25), Justification::centred);
-    String txt = audioProcessor.modTab == 0 ? "MOD" : audioProcessor.modTab == 1 ? "RND" : "SAT";
+    String txt = audioProcessor.modTab == 0 ? "MOD" : audioProcessor.modTab == 1 ? "S&H" : audioProcessor.modTab == 2 ? "RND" : "SAT";
     g.drawText(txt, Rectangle<int>(KNOB_WIDTH, 25).withX(lowcut->getX() + KNOB_WIDTH).withY(lowcut->getY() - 25), Justification::centred);
     g.drawText("DIFF", Rectangle<int>(KNOB_WIDTH, 25).withX(lowcut->getX() + KNOB_WIDTH * 2).withY(lowcut->getY() - 25), Justification::centred);
     g.drawText("DUCK", duckMeter->getBounds().translated(-KNOB_WIDTH, 0), Justification::centred);
@@ -689,8 +689,9 @@ void SirialAudioProcessorEditor::showModTabMenu()
     int tab = audioProcessor.modTab;
     PopupMenu menu;
     menu.addItem(1, "Modulation", true, tab == 0);
-    menu.addItem(2, "Modulation RndWalk", true, tab == 1);
-    menu.addItem(3, "Saturation", true, tab == 2);
+    menu.addItem(2, "Modulation S&H", true, tab == 1);
+    menu.addItem(3, "Modulation RndWalk", true, tab == 1);
+    menu.addItem(4, "Saturation", true, tab == 2);
 
     auto menuPos = localPointToGlobal(modTabBtn.getBounds().getBottomLeft());
     menu.showMenuAsync(PopupMenu::Options()
@@ -701,7 +702,7 @@ void SirialAudioProcessorEditor::showModTabMenu()
             if (result == 0) return;
             audioProcessor.modTab = result - 1;
 
-            if (result < 2)
+            if (result < 3)
             {
                 auto param = audioProcessor.params.getParameter("mod_mode");
                 param->setValueNotifyingHost(param->convertTo0to1(result - 1.f));

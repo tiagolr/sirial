@@ -20,6 +20,7 @@ public:
 	enum ModMode
 	{
 		LFO,
+		SnH,
 		Perlin
 	};
 
@@ -189,6 +190,8 @@ private:
 	float lmodPhase = 0.f; // last phase
 	RCFilter modDepthSmooth{};
 	PerlinGen perlin{(uint32_t)rand()};
+	float modSnH = 0.f;
+	RCFilter modSnHSmooth;
 
 
 	TimeMode timeMode = Straight;
