@@ -206,6 +206,7 @@ public:
     double r = 1.0;
     double state = 0.0;
     float eps = 1e-6f;
+    float target = 0.f;
 
     void setup(float resistance, float _srate)
     {
@@ -222,9 +223,20 @@ public:
         return (float)state;
     }
 
+    void setTarg(float t)
+    {
+        target = t;
+    }
+
+    void tick()
+    {
+        process(target);
+    }
+
     void reset(float value = 0.0f)
     {
         state = (double)value;
+        target = value;
     }
 };
 

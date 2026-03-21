@@ -167,19 +167,23 @@ public:
 	int maxSizeSamples = 0;
 	float maxFeedback = 0.f;
 	float srate = 44100.f;
+	float israte = 0.0001f;
 
 	int ntaps = 4;
 	std::array<Tap, MAX_TAPS> taps;
 
 private:
 	SirialAudioProcessor& audioProcessor;
+	bool isMono = true;
 
 	TimeMode timeMode = Straight;
 	TimeSync timeSync = k1o4;
 	int timeMillis = 10;
 	int baseSamples = 1; // time in samples for global base time
+	float globalRand = 0.f; // amplitude randomizer global
 
-	float israte = 1.f / 44100.f;
+	RCFilter modDepthSmooth{};
+	float modPhase = 0.f;
 
 	// reverse delay
 	bool reverse = false;
@@ -187,4 +191,10 @@ private:
 	int revposR = 0;
 	std::vector<float> revL;
 	std::vector<float> revR;
+
+	// randomized amplitudes (humanize)
+	int sampsCounter = 0; // used for random amplitude modulation
+	int sampsPreFade = 500; // number of samples offset to start randomize
+	std::array<RCFilter, MAX_TAPS> ampsL; // smoothed amplitudes
+	std::array<RCFilter, MAX_TAPS> ampsR; // smoothed amplitudes
 };

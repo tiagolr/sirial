@@ -26,6 +26,8 @@ void Delay::clear()
     revR.clear();
     revposL = 0;
     revposR = 0;
+    sampsCounter = 0;
+    modPhase = 0.f;
 }
 
 void Delay::prepare(float _srate)
@@ -38,12 +40,26 @@ void Delay::prepare(float _srate)
         tap.setup(srate);
     }
 
+    for (auto& amp : ampsL)
+    {
+        amp.setup(0.005f, _srate);
+        amp.reset(1.f);
+    }
+    for (auto& amp : ampsR)
+    {
+        amp.setup(0.005f, _srate);
+        amp.reset(1.f);
+    }
+
+    modDepthSmooth.setup(0.15f, srate);
+    sampsPreFade = (int)std::ceil(_srate * 0.01f); // 10 ms plenty of time for amplitudes fade
+
     clear();
 }
 
 void Delay::onSlider()
 {
-    bool isMono = audioProcessor.params.getRawParameterValue("mode")->load() == 0.f;
+    isMono = audioProcessor.params.getRawParameterValue("mode")->load() == 0.f;
     ntaps = (int)audioProcessor.params.getRawParameterValue("ntaps")->load();
     bool rev = (bool)audioProcessor.params.getRawParameterValue("reverse")->load();
     if (rev != reverse) clear();
@@ -75,6 +91,8 @@ void Delay::onSlider()
     timeMode = (TimeMode)audioProcessor.params.getRawParameterValue("time_mode")->load();
     timeSync = (TimeSync)audioProcessor.params.getRawParameterValue("time_sync")->load();
     timeMillis = (int)audioProcessor.params.getRawParameterValue("time_millis")->load();
+    globalRand = audioProcessor.params.getRawParameterValue("rand_amp")->load();
+
 }
 
 void Delay::updateBaseSamples()
@@ -148,15 +166,32 @@ void Delay::processBlock(float* left, float* right, int nsamps)
         if (revsizeR > 1) inputOffsetR = -revsizeR / 2 + 1;
     }
 
+    float modDepth = audioProcessor.params.getRawParameterValue("mod_depth")->load();
+    float modRate = audioProcessor.params.getRawParameterValue("mod_rate")->load();
+    float maxDepth = std::min(taps[0].timeL, taps[0].timeR) * 0.5f;
+    modDepth = modDepth * std::min(srate / 250.f, maxDepth);
+
 
     // Process samples
     std::array<float, MAX_TAPS> lfeed{};
     std::array<float, MAX_TAPS> rfeed{};
     for (int i = 0; i < nsamps; ++i)
     {
+        // modulation
+        float mdepth = modDepthSmooth.process(modDepth);
+        float mod = 0.f;
+        if (mdepth > 1e-5f)
+        {
+            modPhase += modRate * israte;
+            while (modPhase > 1.f) modPhase -= 1.f;
+            mod = std::sin(modPhase * MathConstants<float>::twoPi);
+        }
+        mod = mod * mdepth - mdepth;
+
         if (reverse)
         {
             processReverse(left[i], right[i], revsizeL, revsizeR, midL, midR, fadetotalL, fadetotalR);
+            mod = 0; // modulation doesn't play well with reverse mode
         }
 
         // read from taps
@@ -165,8 +200,8 @@ void Delay::processBlock(float* left, float* right, int nsamps)
             auto& tap = taps[t];
             float ltime = tap.stimeL.process((float)tap.timeL);
             float rtime = tap.stimeR.process((float)tap.timeR);
-            float l = tap.left.read3(ltime);
-            float r = tap.right.read3(rtime);
+            float l = tap.left.read3(ltime + mod);
+            float r = tap.right.read3(rtime + mod);
             l = tap.leftHP.processHP(tap.leftLP.processLP(l));
             r = tap.rightHP.processHP(tap.rightLP.processLP(r));
             lfeed[t] = l;
@@ -228,10 +263,46 @@ void Delay::processBlock(float* left, float* right, int nsamps)
 
         for (int t = 0; t < ntaps; ++t)
         {
-            auto& tap = taps[t];
-            left[i] += lfeed[t] * tap.ampL;
-            right[i] += rfeed[t] * tap.ampR;
+            left[i] += lfeed[t] * (float)ampsL[t].state;
+            right[i] += rfeed[t] * (float)ampsR[t].state;
         }
+
+        // randomize amplitudes
+        if (sampsCounter == baseSamples - sampsPreFade)
+        {
+            for (int t = 0; t < ntaps; ++t)
+            {
+                // randomize amplitudes, if there is no random the target amplitudes will remain at tap base values
+                auto& tap = taps[t];
+                float baseL = tap.ampL;
+                float max_up = std::min(globalRand, 1.0f - baseL);
+                float max_down = std::min(globalRand, baseL);
+                float offsetL = ((rand() / (float)RAND_MAX) * (max_up + max_down)) - max_down;
+                ampsL[t].setTarg(baseL + offsetL);
+
+                if (isMono)
+                {
+                    ampsR[t] = ampsL[t];
+                }
+                else
+                {
+                    float baseR = tap.ampR;
+                    float max_upR = std::min(globalRand, 1.0f - baseR);
+                    float max_downR = std::min(globalRand, baseR);
+                    float offsetR = ((rand() / (float)RAND_MAX) * (max_upR + max_downR)) - max_downR;
+                    ampsR[t].setTarg(baseR + offsetR);
+                }
+            }
+        }
+
+        for (int t = 0; t < ntaps; ++t)
+        {
+            ampsL[t].tick();
+            ampsR[t].tick();
+        }
+
+        sampsCounter += 1;
+        sampsCounter %= baseSamples;
     }
 }
 
