@@ -19,6 +19,7 @@ SirialAudioProcessorEditor::SirialAudioProcessorEditor (SirialAudioProcessor& p)
     audioProcessor.params.addParameterListener("time_mode", this);
     audioProcessor.params.addParameterListener("pan_dry_sum", this);
     audioProcessor.params.addParameterListener("pan_wet_sum", this);
+    audioProcessor.params.addParameterListener("mod_rate_mode", this);
 
     // NAVBAR
     int col = PLUG_PADDING;
@@ -222,7 +223,29 @@ SirialAudioProcessorEditor::SirialAudioProcessorEditor (SirialAudioProcessor& p)
 
     distColor = std::make_unique<Rotary>(audioProcessor, "dist_color", "Color", Rotary::percx100);
     addAndMakeVisible(distColor.get());
-    distColor->setBounds(distDrive->getBounds().translated(0, KNOB_HEIGHT));
+    distColor->setBounds(distDrive->getBounds().translated(0, KNOB_HEIGHT + 5));
+
+    modDepth = std::make_unique<Rotary>(audioProcessor, "mod_depth", "Depth", Rotary::percx100);
+    addAndMakeVisible(modDepth.get());
+    modDepth->setBounds(distDrive->getBounds());
+
+    modRate = std::make_unique<Rotary>(audioProcessor, "mod_rate", "Rate", Rotary::hz1f);
+    addAndMakeVisible(modRate.get());
+    modRate->setBounds(distColor->getBounds());
+
+    modRateSync = std::make_unique<Rotary>(audioProcessor, "mod_rate_sync", "Rate", Rotary::kChoice);
+    addAndMakeVisible(modRateSync.get());
+    modRateSync->setBounds(distColor->getBounds());
+
+    addAndMakeVisible(modTabBtn);
+    modTabBtn.setAlpha(0.f);
+    modTabBtn.setBounds(Rectangle<int>(KNOB_WIDTH, 25).withX(modDepth->getX()).withBottomY(modDepth->getY()));
+    modTabBtn.onClick = [this] { showModTabMenu(); };
+
+    addAndMakeVisible(modModeBtn);
+    modModeBtn.setAlpha(0.f);
+    modModeBtn.setBounds(Rectangle<int>(25, 25).withRightX(modRateSync->getRight()).withY(modRateSync->getY()).translated(10, -3));
+    modModeBtn.onClick = [this] { showModRateMenu(); };
 
     diffAmt = std::make_unique<Rotary>(audioProcessor, "diff_amt", "Amount", Rotary::percx100);
     addAndMakeVisible(diffAmt.get());
@@ -230,7 +253,7 @@ SirialAudioProcessorEditor::SirialAudioProcessorEditor (SirialAudioProcessor& p)
 
     diffSize = std::make_unique<Rotary>(audioProcessor, "diff_size", "Size", Rotary::percx100);
     addAndMakeVisible(diffSize.get());
-    diffSize->setBounds(diffAmt->getBounds().translated(0, KNOB_HEIGHT));
+    diffSize->setBounds(diffAmt->getBounds().translated(0, KNOB_HEIGHT + 5));
 
     // DUCKING
 
@@ -298,6 +321,8 @@ SirialAudioProcessorEditor::SirialAudioProcessorEditor (SirialAudioProcessor& p)
     customLookAndFeel = new CustomLookAndFeel();
     setLookAndFeel(customLookAndFeel);
 
+    modModeBtn.toFront(false);
+
     init = true;
     resized();
     toggleUIComponents();
@@ -314,6 +339,7 @@ SirialAudioProcessorEditor::~SirialAudioProcessorEditor()
     audioProcessor.params.removeParameterListener("time_mode", this);
     audioProcessor.params.removeParameterListener("pan_dry_sum", this);
     audioProcessor.params.removeParameterListener("pan_wet_sum", this);
+    audioProcessor.params.removeParameterListener("mod_rate_mode", this);
 }
 
 void SirialAudioProcessorEditor::changeListenerCallback(ChangeBroadcaster* source)
@@ -339,6 +365,17 @@ void SirialAudioProcessorEditor::toggleUIComponents()
     auto timeMode = (int)audioProcessor.params.getRawParameterValue("time_mode")->load();
     tapsTimeMillis->setVisible(timeMode == 0);
     tapsTimeSync->setVisible(timeMode > 0);
+
+    auto modTab = audioProcessor.modTab;
+    int modRateMode = (int)audioProcessor.params.getRawParameterValue("mod_rate_mode")->load();
+
+    modRate->setVisible(modTab < 2 && modRateMode == 0);
+    modRateSync->setVisible(modTab < 2 && modRateMode > 0);
+    modModeBtn.setVisible(modTab < 2);
+    modDepth->setVisible(modTab < 2);
+    distColor->setVisible(modTab == 2);
+    distDrive->setVisible(modTab == 2);
+
     MessageManager::callAsync([this] { repaint(); });
 }
 
@@ -475,9 +512,23 @@ void SirialAudioProcessorEditor::paint (Graphics& g)
 
     g.setColour(Colour(COLOR_NEUTRAL));
     g.drawText("DAMP", Rectangle<int>(KNOB_WIDTH, 25).withX(lowcut->getX()).withY(lowcut->getY() - 25), Justification::centred);
-    g.drawText("SAT", Rectangle<int>(KNOB_WIDTH, 25).withX(lowcut->getX() + KNOB_WIDTH).withY(lowcut->getY() - 25), Justification::centred);
+    String txt = audioProcessor.modTab == 0 ? "MOD" : audioProcessor.modTab == 1 ? "RND" : "SAT";
+    g.drawText(txt, Rectangle<int>(KNOB_WIDTH, 25).withX(lowcut->getX() + KNOB_WIDTH).withY(lowcut->getY() - 25), Justification::centred);
     g.drawText("DIFF", Rectangle<int>(KNOB_WIDTH, 25).withX(lowcut->getX() + KNOB_WIDTH * 2).withY(lowcut->getY() - 25), Justification::centred);
     g.drawText("DUCK", duckMeter->getBounds().translated(-KNOB_WIDTH, 0), Justification::centred);
+
+    auto bbb = modTabBtn.getBounds().withWidth(25).withRightX(modTabBtn.getRight());
+    UIUtils::drawTriangle(g, bbb.reduced(8).translated(3, 0).toFloat(), 2, Colour(COLOR_NEUTRAL));
+
+    if (audioProcessor.modTab < 2)
+    {
+        bbb = modModeBtn.getBounds();
+        auto modRateMode = (int)audioProcessor.params.getRawParameterValue("mod_rate_mode")->load();
+        if (modRateMode == 0)
+            UIUtils::drawClock(g, bbb.toFloat().reduced(4.f), Colour(COLOR_NEUTRAL));
+        else
+            UIUtils::drawNote(g, bbb.toFloat(), modRateMode - 1, Colour(COLOR_NEUTRAL));
+    }
 
     // paint pan sum buttons
     bool panDrySum = (bool)audioProcessor.params.getRawParameterValue("pan_dry_sum")->load();
@@ -629,6 +680,56 @@ void SirialAudioProcessorEditor::showPresetsMenu()
             {
                 audioProcessor.presetmgr->load(userPresets[result - 1000].getFileNameWithoutExtension(), 0);
             }
+        }
+    );
+}
+
+void SirialAudioProcessorEditor::showModTabMenu()
+{
+    int tab = audioProcessor.modTab;
+    PopupMenu menu;
+    menu.addItem(1, "Modulation", true, tab == 0);
+    menu.addItem(2, "Modulation RndWalk", true, tab == 1);
+    menu.addItem(3, "Saturation", true, tab == 2);
+
+    auto menuPos = localPointToGlobal(modTabBtn.getBounds().getBottomLeft());
+    menu.showMenuAsync(PopupMenu::Options()
+        .withTargetComponent(*this)
+        .withTargetScreenArea({ menuPos.getX(), menuPos.getY(), 1, 1 }),
+        [this](int result)
+        {
+            if (result == 0) return;
+            audioProcessor.modTab = result - 1;
+
+            if (result < 2)
+            {
+                auto param = audioProcessor.params.getParameter("mod_mode");
+                param->setValueNotifyingHost(param->convertTo0to1(result - 1.f));
+            }
+
+            toggleUIComponents();
+        }
+    );
+}
+
+void SirialAudioProcessorEditor::showModRateMenu()
+{
+    auto mode = (int)audioProcessor.params.getRawParameterValue("mod_rate_mode")->load();
+    PopupMenu menu;
+    menu.addItem(1, "Hz", true, mode == 0);
+    menu.addItem(2, "Straight", true, mode == 1);
+    menu.addItem(3, "Triplet", true, mode == 2);
+    menu.addItem(4, "Dotted", true, mode == 3);
+
+    auto menuPos = localPointToGlobal(modModeBtn.getBounds().getBottomLeft());
+    menu.showMenuAsync(PopupMenu::Options()
+        .withTargetComponent(*this)
+        .withTargetScreenArea({ menuPos.getX(), menuPos.getY(), 1, 1 }),
+        [this](int result)
+        {
+            if (result == 0) return;
+            auto param = audioProcessor.params.getParameter("mod_rate_mode");
+            param->setValueNotifyingHost(param->convertTo0to1(result - 1.f));
         }
     );
 }

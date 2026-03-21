@@ -41,6 +41,8 @@ public:
     void showSettings();
     void showPresetsMenu();
     void showModeMenu();
+    void showModRateMenu();
+    void showModTabMenu();
     void savePreset();
     void refreshOutGainLabel();
 
@@ -82,8 +84,13 @@ private:
     std::unique_ptr<Rotary> highcut;
     std::unique_ptr<Rotary> distDrive;
     std::unique_ptr<Rotary> distColor;
+    std::unique_ptr<Rotary> modRate;
+    std::unique_ptr<Rotary> modRateSync;
+    std::unique_ptr<Rotary> modDepth;
     std::unique_ptr<Rotary> diffAmt;
     std::unique_ptr<Rotary> diffSize;
+    TextButton modTabBtn;
+    TextButton modModeBtn;
 
     std::unique_ptr<Rotary> duckThres;
     std::unique_ptr<Rotary> duckAmt;
