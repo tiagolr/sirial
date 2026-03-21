@@ -175,7 +175,7 @@ SirialAudioProcessorEditor::SirialAudioProcessorEditor (SirialAudioProcessor& p)
 
     panDry = std::make_unique<Rotary>(audioProcessor, "pan_dry", "Pan Dry", Rotary::pan, true);
     addAndMakeVisible(panDry.get());
-    panDry->setBounds(feedback->getBounds().translated(KNOB_WIDTH + 30, 0));
+    panDry->setBounds(feedback->getBounds().translated(KNOB_WIDTH + 40, 0));
 
     panWet = std::make_unique<Rotary>(audioProcessor, "pan_wet", "Pan Wet", Rotary::pan, true);
     addAndMakeVisible(panWet.get());
