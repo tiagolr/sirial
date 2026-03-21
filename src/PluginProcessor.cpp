@@ -259,6 +259,7 @@ void SirialAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
     wetBuffer.setSize (2, samplesPerBlock);
     srate = sampleRate;
     diffusor->prepare((float)srate);
+    delay->prepare((float)srate);
     onSlider();
     sendChangeMessage();
 }
