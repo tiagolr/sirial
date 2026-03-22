@@ -39,7 +39,7 @@ This plug-in doesn't include many effects since applying them on each tap can be
   * **Intuitive UI** to configure the taps offset and amplitude
   * **Stereo Taps** with different offsets for left and right channels
   * **Ping-Pong Mode** where the feedback is crossed on each tap
-  * **Modulation** with three modes: SineWave, SH& and Perlin
+  * **Modulation** with 5 modes: Sine, Tri, Square, Rand S&H and Rand Walk.
   * **Delay Reverse** mode
   * **Basic Effects** like damping, saturation and diffusion
   * **Ducking** with controls for threshold, amount, attack and release
