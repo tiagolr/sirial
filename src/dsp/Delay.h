@@ -19,9 +19,11 @@ public:
 
 	enum ModMode
 	{
-		LFO,
+		Sine,
 		SnH,
-		Perlin
+		Perlin,
+		Triangle,
+		Square
 	};
 
 	enum TimeMode
@@ -183,7 +185,7 @@ public:
 private:
 	SirialAudioProcessor& audioProcessor;
 	bool isMono = true;
-	ModMode modMode = LFO;
+	ModMode modMode = Sine;
 	TimeMode modRateMode = Millis; // Hz
 	float modRateSyncQN = 1.f;
 	float modPhase = 0.f;

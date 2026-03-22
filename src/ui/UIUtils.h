@@ -28,4 +28,6 @@ static void drawReverse(Graphics& g, Rectangle<float> bounds, Colour c);
 static void drawSineWave(juce::Graphics& g, Rectangle<float> bounds, int n, Colour c);
 static void drawSnH(juce::Graphics& g, Rectangle<float> bounds, Colour c);
 static void drawPerlin(juce::Graphics& g, Rectangle<float> bounds, Colour c);
+static void drawSquareWave(juce::Graphics& g, Rectangle<float> bounds, Colour c);
+static void drawTriangleWave(juce::Graphics& g, Rectangle<float> bounds, Colour c);
 };

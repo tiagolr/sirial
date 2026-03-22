@@ -343,3 +343,27 @@ void UIUtils::drawPerlin(juce::Graphics& g, Rectangle<float> bounds, Colour c)
     g.setColour(c);
     g.strokePath(p, PathStrokeType(1.f));
 }
+
+void UIUtils::drawSquareWave(juce::Graphics& g, Rectangle<float> bounds, Colour c)
+{
+    Path p;
+
+    p.startNewSubPath(bounds.getTopLeft());
+    p.lineTo(bounds.getCentreX(), bounds.getY());
+    p.lineTo(bounds.getCentreX(), bounds.getBottom());
+    p.lineTo(bounds.getBottomRight());
+
+    g.setColour(c);
+    g.strokePath(p, PathStrokeType(1.f));
+}
+
+void UIUtils::drawTriangleWave(juce::Graphics& g, Rectangle<float> bounds, Colour c)
+{
+    Path p;
+    p.startNewSubPath(bounds.getBottomLeft());
+    p.lineTo({ bounds.getCentreX(), bounds.getY() });
+    p.lineTo(bounds.getBottomRight());
+
+    g.setColour(c);
+    g.strokePath(p, PathStrokeType(1.f));
+}

@@ -50,7 +50,7 @@ void Delay::prepare(float _srate)
         amp.reset(1.f);
     }
 
-    modSnHSmooth.setup(0.1f, srate);
+    modSnHSmooth.setup(0.05f, srate);
     modDepthSmooth.setup(0.15f, srate);
     sampsPreFade = (int)std::ceil(_srate * 0.01f); // 10 ms plenty of time for amplitudes fade
 
@@ -218,9 +218,17 @@ void Delay::processBlock(float* left, float* right, int nsamps)
         float mod = 0.f;
         if (mdepth > 1e-5f)
         {
-            if (modMode == LFO)
+            if (modMode == Sine)
             {
                 mod = std::sin(modPhase * MathConstants<float>::twoPi);
+            }
+            else if (modMode == Triangle)
+            {
+                mod = 1.f - 4.f * std::abs(((modPhase + 0.25f) - std::floor(modPhase + 0.25f)) - 0.5f);
+            }
+            else if (modMode == Square)
+            {
+                mod = modSnHSmooth.process(modPhase < 0.5f ? 1.f : -1.f);
             }
             else if (modMode == SnH)
             {

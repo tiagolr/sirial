@@ -64,7 +64,7 @@ AudioProcessorValueTreeState::ParameterLayout SirialAudioProcessor::createParame
     layout.add(std::make_unique<AudioParameterFloat>("highcut", "highcut", NormalisableRange<float>(20.f, 20000.f, 1.f, 0.4f), 20000.f));
     layout.add(std::make_unique<AudioParameterFloat>("pipo_width", "Pipo Width", -1.f, 1.f, 1.f));
 
-    layout.add(std::make_unique<AudioParameterChoice>("mod_mode", "Modulation Mode", StringArray{ "LFO", "S&H", "Perlin"}, 0));
+    layout.add(std::make_unique<AudioParameterChoice>("mod_mode", "Modulation Mode", StringArray{ "Sine", "S&H", "Perlin", "Triangle", "Square"}, 0));
     layout.add(std::make_unique<AudioParameterFloat>("mod_depth", "Modulation Amt", 0.f, 1.f, 0.0f));
     layout.add(std::make_unique<AudioParameterFloat>("mod_rate", "Modulation Rate", NormalisableRange<float>(0.01f, 10.f, 0.0001f, 0.5f), 0.15f));
     layout.add(std::make_unique<AudioParameterChoice>("mod_rate_sync", "Modulation Rate Sync", StringArray{ "1/32", "1/16", "1/8", "1/4", "1/2", "1/1", "2/1", "4/1", "8/1", "16/1", "32/1"}, 5));

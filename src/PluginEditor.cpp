@@ -549,8 +549,12 @@ void SirialAudioProcessorEditor::paint (Graphics& g)
             UIUtils::drawSineWave(g, bbb.reduced(3, 7).toFloat(), 2, Colour(COLOR_NEUTRAL));
         else if (modMode == 1)
             UIUtils::drawSnH(g, bbb.reduced(3, 7).toFloat(), Colour(COLOR_NEUTRAL));
-        else 
+        else if (modMode == 2)
             UIUtils::drawPerlin(g, bbb.reduced(5, 7).toFloat(), Colour(COLOR_NEUTRAL));
+        else if (modMode == 3)
+            UIUtils::drawTriangleWave(g, bbb.reduced(7, 7).toFloat(), Colour(COLOR_NEUTRAL));
+        else 
+            UIUtils::drawSquareWave(g, bbb.reduced(5, 7).toFloat(), Colour(COLOR_NEUTRAL));
     }   
 
     // paint pan sum buttons
@@ -732,8 +736,10 @@ void SirialAudioProcessorEditor::showModModeMenu()
     auto mode = (int)audioProcessor.params.getRawParameterValue("mod_mode")->load();
     PopupMenu menu;
     menu.addItem(1, "Sine", true, mode == 0);
-    menu.addItem(2, "Samp&Hold", true, mode == 1);
-    menu.addItem(3, "Perlin", true, mode == 2);
+    menu.addItem(4, "Triangle", true, mode == 3);
+    menu.addItem(5, "Square", true, mode == 4);
+    menu.addItem(2, "Rand S&H", true, mode == 1);
+    menu.addItem(3, "Rand Walk", true, mode == 2);
 
     auto menuPos = localPointToGlobal(modModeBtn.getBounds().getBottomLeft());
     menu.showMenuAsync(PopupMenu::Options()
