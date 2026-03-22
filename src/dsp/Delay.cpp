@@ -218,30 +218,33 @@ void Delay::processBlock(float* left, float* right, int nsamps)
         float mod = 0.f;
         if (mdepth > 1e-5f)
         {
-            if (modMode == Sine)
+            switch (modMode)
             {
-                mod = std::sin(modPhase * MathConstants<float>::twoPi);
+                case Sine:
+                    mod = std::sin(modPhase * MathConstants<float>::twoPi);
+                    break;
+
+                case Triangle:
+                    mod = 1.f - 4.f * std::abs(((modPhase + 0.25f) - std::floor(modPhase + 0.25f)) - 0.5f);
+                    break;
+
+                case Square:
+                    mod = modSnHSmooth.process(modPhase < 0.5f ? 1.f : -1.f);
+                    break;
+
+                case SnH:
+                    mod = modSnHSmooth.process(modSnH);
+                    if (modPhase < lmodPhase)
+                        modSnH = rand() / float(RAND_MAX) * 2.f - 1.f;
+                    break;
+
+                case Perlin:
+                    mod = perlin.process(modPhase);
+                    if (modPhase < lmodPhase)
+                        perlin.next();
+                    break;
             }
-            else if (modMode == Triangle)
-            {
-                mod = 1.f - 4.f * std::abs(((modPhase + 0.25f) - std::floor(modPhase + 0.25f)) - 0.5f);
-            }
-            else if (modMode == Square)
-            {
-                mod = modSnHSmooth.process(modPhase < 0.5f ? 1.f : -1.f);
-            }
-            else if (modMode == SnH)
-            {
-                mod = modSnHSmooth.process(modSnH);
-                if (modPhase < lmodPhase)
-                    modSnH = rand() / float(RAND_MAX) * 2.f - 1.f;
-            }
-            else
-            {
-                mod = perlin.process(modPhase);
-                if (modPhase < lmodPhase)
-                    perlin.next();
-            }
+
             lmodPhase = modPhase;
             modPhase += modPhaseInc;
             if (modPhase >= 1.f)
