@@ -55,8 +55,6 @@ public:
     double srate = 44100.0;
     double secondsPerBar = 1.0;
     double timeInSeconds = 0.f;
-    int64_t lastSamplePosition = 0;
-    bool clearDelayOnStop = true;
     bool useMixKnob = false;
 
     // UI State
@@ -96,6 +94,7 @@ public:
     //==============================================================================
     AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override;
+    void reset() override;
 
     //==============================================================================
     const String getName() const override;

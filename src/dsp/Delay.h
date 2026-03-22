@@ -193,7 +193,7 @@ private:
 	RCFilter modDepthSmooth{};
 	PerlinGen perlin{(uint32_t)rand()};
 	float modSnH = 0.f;
-	RCFilter modSnHSmooth;
+	RCFilter modValSmooth;
 
 
 	TimeMode timeMode = Straight;

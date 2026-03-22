@@ -161,7 +161,6 @@ void SirialAudioProcessor::loadSettings ()
     if (auto* file = settings.getUserSettings())
     {
         scale = (float)file->getDoubleValue("scale", 1.0f);
-        clearDelayOnStop = file->getBoolValue("clearDelayOnStop", true);
     }
 }
 
@@ -171,7 +170,6 @@ void SirialAudioProcessor::saveSettings ()
     if (auto* file = settings.getUserSettings())
     {
         file->setValue("scale", scale);
-        file->setValue("clearDelayOnStop", clearDelayOnStop);
     }
     settings.saveIfNeeded();
 }
@@ -293,6 +291,11 @@ bool SirialAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) c
 }
 #endif
 
+void SirialAudioProcessor::reset()
+{
+    clearAll();
+}
+
 void SirialAudioProcessor::onSlider()
 {
     auto mode = (Delay::DelayMode)params.getRawParameterValue("mode")->load();
@@ -371,21 +374,13 @@ void SirialAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
             auto play = pos->getIsPlaying();
             if (playing != play) // onplay() | onstop()
             {
-                if (play || clearDelayOnStop)
+                if (play) 
                     clearAll();
             }
             playing = play;
             if (auto ts = pos->getTimeInSeconds())
             {
                 timeInSeconds = *ts;
-            }
-            if (auto ts = pos->getTimeInSamples())
-            {
-                int64_t currentSample = *ts;
-                if (currentSample < lastSamplePosition)
-                    clearAll();
-
-                lastSamplePosition = currentSample;
             }
         }
     }
